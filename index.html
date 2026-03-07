@@ -178,7 +178,7 @@
 // --- CONFIGURATION ---
 // Note: In production, NEVER expose a service_role key. Anon keys are fine if Row Level Security (RLS) is configured in Supabase.
 const SUPABASE_URL = 'https://vfxzgsywikkzayxwcsmk.supabase.co';
-const SUPABASE_KEY = 'YOUR_ANON_KEY'; // Replace with the actual Anon Key provided by Supabase
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmeHpnc3l3aWtremF5eHdjc21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MDg0MzIsImV4cCI6MjA4ODQ4NDQzMn0.wYK18UAK22m6zCImMaHyCwcWILkGexaXCn0OzNrvd6c'; // Replace with the actual Anon Key provided by Supabase
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- APP STATE & LOGIC ---
