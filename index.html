@@ -1,1044 +1,321 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SplitMate</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <title>SplitMate Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #0f172a;
+      --surface: #ffffff;
+      --background: #f8fafc;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
 
-```
-:root {
-  --teal: #1CC29F;
-  --coral: #FF6B6B;
-  --purple: #6C63FF;
-  --orange: #FF9F43;
-  --blue: #54A0FF;
-  --pink: #FF6CAE;
-  --dark: #1a1a2e;
-  --card: #ffffff;
-  --bg: #f0f4f8;
-  --text: #2d3436;
-  --subtext: #636e72;
-  --border: #e0e0e0;
-}
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
 
-body {
-  font-family: 'Nunito', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  max-width: 430px;
-  margin: 0 auto;
-  position: relative;
-  overflow-x: hidden;
-}
+    body { background: var(--background); color: var(--text); min-height: 100vh; max-width: 480px; margin: 0 auto; position: relative; overflow-x: hidden; }
 
-/* ── SCREENS ── */
-.screen { display: none; min-height: 100vh; flex-direction: column; }
-.screen.active { display: flex; }
+    /* --- LAYOUT & SCREENS --- */
+    .screen { display: none; min-height: 100vh; flex-direction: column; opacity: 0; transition: opacity 0.3s ease; }
+    .screen.active { display: flex; opacity: 1; }
 
-/* ── TOP BAR ── */
-.topbar {
-  background: var(--dark);
-  color: white;
-  padding: 48px 20px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-.topbar h1 { font-size: 22px; font-weight: 900; }
-.topbar .back-btn {
-  background: rgba(255,255,255,0.15);
-  border: none;
-  color: white;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-.topbar .action-btn {
-  background: var(--teal);
-  border: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-}
+    /* --- TYPOGRAPHY & BUTTONS --- */
+    h1, h2, h3 { color: var(--dark); font-weight: 800; }
+    
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%; padding: 14px; border: none; border-radius: var(--radius-md);
+      font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+    .btn-primary:active { transform: translateY(2px); background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); color: white; }
 
-/* ── LOGIN ── */
-#screen-login {
-  background: linear-gradient(145deg, var(--dark) 0%, #16213e 60%, #0f3460 100%);
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-}
-.login-logo {
-  font-size: 64px;
-  margin-bottom: 12px;
-}
-.login-title {
-  font-size: 36px;
-  font-weight: 900;
-  color: white;
-  margin-bottom: 6px;
-}
-.login-title span { color: var(--teal); }
-.login-sub {
-  color: rgba(255,255,255,0.6);
-  font-size: 15px;
-  margin-bottom: 48px;
-  text-align: center;
-}
-.login-card {
-  background: white;
-  border-radius: 24px;
-  padding: 28px 24px;
-  width: 100%;
-}
-.login-card h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-.login-card p { color: var(--subtext); font-size: 14px; margin-bottom: 24px; }
-.input-group { margin-bottom: 16px; }
-.input-group label { display: block; font-weight: 700; font-size: 13px; margin-bottom: 6px; color: var(--subtext); text-transform: uppercase; letter-spacing: 0.5px; }
-.input-group input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 2px solid var(--border);
-  border-radius: 14px;
-  font-size: 16px;
-  font-family: 'Nunito', sans-serif;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.input-group input:focus { border-color: var(--teal); }
-.btn-primary {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, var(--teal), var(--blue));
-  color: white;
-  border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: opacity 0.2s;
-}
-.btn-primary:active { opacity: 0.85; }
-.msg { margin-top: 16px; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center; }
-.msg.success { background: #d4f5ee; color: #0a7c5c; }
-.msg.error { background: #ffe0e0; color: #c0392b; }
+    /* --- FLOATING ACTION BUTTON --- */
+    .fab {
+      position: fixed; bottom: 32px; right: 24px;
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--dark); color: white; border: none;
+      font-size: 32px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2); cursor: pointer; z-index: 100;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .fab:active { transform: scale(0.9); }
 
-/* ── HOME ── */
-#screen-home { background: var(--bg); }
-.home-header {
-  background: var(--dark);
-  padding: 48px 20px 24px;
-  color: white;
-}
-.home-header .greeting { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
-.home-header .username { font-size: 24px; font-weight: 900; }
-.home-header .net-balance {
-  margin-top: 16px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.net-balance .label { font-size: 13px; color: rgba(255,255,255,0.6); }
-.net-balance .amount { font-size: 28px; font-weight: 900; }
-.net-balance .amount.positive { color: var(--teal); }
-.net-balance .amount.negative { color: var(--coral); }
-.net-balance .amount.neutral { color: white; }
+    /* --- LOGIN SCREEN --- */
+    #screen-login { background: var(--dark); justify-content: center; padding: 32px; color: white; }
+    .login-header { text-align: center; margin-bottom: 48px; }
+    .login-header h1 { color: white; font-size: 42px; margin-top: 16px; }
+    .login-header span { color: var(--primary); }
+    .login-card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px; color: var(--text); }
+    
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input-group input, select {
+      width: 100%; padding: 14px 16px; border: 2px solid var(--border);
+      border-radius: var(--radius-md); font-size: 16px; font-weight: 500;
+      transition: border-color 0.2s; outline: none; background: var(--surface);
+    }
+    .input-group input:focus, select:focus { border-color: var(--primary); }
 
-.section-title {
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--subtext);
-  padding: 20px 20px 10px;
-}
+    /* --- HOME SCREEN --- */
+    .header-glass {
+      background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 50; padding: 24px; border-bottom: 1px solid var(--border);
+    }
+    .balance-card { background: var(--dark); border-radius: var(--radius-lg); padding: 24px; color: white; margin: 24px; box-shadow: var(--shadow); }
+    .balance-label { color: #94a3b8; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+    .balance-amount { font-size: 36px; font-weight: 800; }
+    .balance-amount.positive { color: var(--success); }
+    .balance-amount.negative { color: var(--danger); }
 
-.groups-list { padding: 0 16px; flex: 1; }
-.group-card {
-  background: white;
-  border-radius: 20px;
-  padding: 16px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-.group-card:active { transform: scale(0.98); }
-.group-icon {
-  width: 50px; height: 50px;
-  border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-.group-info { flex: 1; }
-.group-info .name { font-size: 16px; font-weight: 800; }
-.group-info .members { font-size: 13px; color: var(--subtext); margin-top: 2px; }
-.group-balance { text-align: right; }
-.group-balance .amount { font-size: 16px; font-weight: 800; }
-.group-balance .label { font-size: 11px; color: var(--subtext); }
+    /* --- LISTS & CARDS --- */
+    .list-container { padding: 0 24px 100px; }
+    .card {
+      background: var(--surface); border-radius: var(--radius-md); padding: 16px;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 16px;
+      box-shadow: var(--shadow); cursor: pointer; transition: transform 0.2s;
+    }
+    .card:active { transform: scale(0.98); }
+    .card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: #e0e7ff; }
+    .card-content { flex: 1; }
+    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .card-subtitle { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .card-value { text-align: right; font-weight: 800; font-size: 16px; }
 
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--subtext);
-}
-.empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
-.empty-state p { font-size: 16px; font-weight: 600; }
-.empty-state small { font-size: 14px; }
+    /* --- NATIVE MODALS --- */
+    dialog {
+      margin: auto; padding: 32px 24px; border: none; border-radius: var(--radius-lg);
+      width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      background: var(--surface); color: var(--text);
+    }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .close-btn { background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; }
 
-/* ── FAB ── */
-.fab {
-  position: fixed;
-  bottom: 28px;
-  right: 24px;
-  width: 60px; height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--teal), var(--blue));
-  color: white;
-  border: none;
-  font-size: 28px;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(28, 194, 159, 0.4);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 200;
-  transition: transform 0.1s;
-}
-.fab:active { transform: scale(0.93); }
-
-/* ── MODAL ── */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 300;
-  align-items: flex-end;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: white;
-  border-radius: 28px 28px 0 0;
-  padding: 24px 20px 40px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.modal-handle {
-  width: 40px; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: 0 auto 20px;
-}
-.modal h2 { font-size: 22px; font-weight: 900; margin-bottom: 20px; }
-
-/* ── GROUP DETAIL ── */
-#screen-group { background: var(--bg); }
-.group-detail-header {
-  padding: 48px 20px 20px;
-  color: white;
-}
-.group-detail-header .back { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 8px; cursor: pointer; }
-.group-detail-header h1 { font-size: 26px; font-weight: 900; }
-.group-detail-header .member-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.member-chip {
-  background: rgba(255,255,255,0.2);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.balance-cards {
-  display: flex;
-  gap: 10px;
-  padding: 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.balance-cards::-webkit-scrollbar { display: none; }
-.balance-card {
-  background: white;
-  border-radius: 16px;
-  padding: 14px 16px;
-  min-width: 140px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-  flex-shrink: 0;
-}
-.balance-card .person { font-size: 13px; font-weight: 700; color: var(--subtext); }
-.balance-card .bal { font-size: 20px; font-weight: 900; margin-top: 4px; }
-.balance-card .bal.pos { color: var(--teal); }
-.balance-card .bal.neg { color: var(--coral); }
-
-.settle-btn {
-  margin: 0 16px 8px;
-  width: calc(100% - 32px);
-  padding: 14px;
-  background: linear-gradient(135deg, var(--orange), var(--coral));
-  color: white;
-  border: none;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.expenses-list { padding: 0 16px; flex: 1; }
-.expense-item {
-  background: white;
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-.expense-icon {
-  width: 44px; height: 44px;
-  border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.expense-info { flex: 1; }
-.expense-info .desc { font-size: 15px; font-weight: 700; }
-.expense-info .meta { font-size: 12px; color: var(--subtext); margin-top: 2px; }
-.expense-amount { text-align: right; }
-.expense-amount .total { font-size: 16px; font-weight: 900; color: var(--text); }
-.expense-amount .your-share { font-size: 12px; color: var(--subtext); }
-
-/* ── SETTLE MODAL ── */
-.debt-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border);
-}
-.debt-item:last-child { border-bottom: none; }
-.debt-arrow { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
-.debt-arrow .arrow { color: var(--coral); font-size: 18px; }
-.debt-amt { font-size: 18px; font-weight: 900; color: var(--coral); }
-
-/* ── ADD EXPENSE ── */
-.split-method-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-bottom: 4px;
-}
-.split-tab {
-  padding: 8px 14px;
-  border-radius: 20px;
-  border: 2px solid var(--border);
-  background: white;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-.split-tab.active {
-  background: var(--purple);
-  border-color: var(--purple);
-  color: white;
-}
-
-.member-select-list { margin-bottom: 16px; }
-.member-select-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
-.member-select-item:last-child { border-bottom: none; }
-.member-select-item .name { font-weight: 700; font-size: 15px; }
-.member-select-item input[type="checkbox"] {
-  width: 22px; height: 22px;
-  accent-color: var(--teal);
-}
-.member-select-item input[type="number"],
-.member-select-item input[type="text"] {
-  width: 80px;
-  padding: 6px 10px;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  text-align: right;
-  font-family: 'Nunito', sans-serif;
-}
-
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.cat-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 8px;
-  border: 2px solid var(--border);
-  border-radius: 14px;
-  background: white;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-  transition: all 0.2s;
-}
-.cat-btn .icon { font-size: 24px; }
-.cat-btn.active { border-color: var(--purple); background: #f0eeff; color: var(--purple); }
-
-select {
-  width: 100%;
-  padding: 14px 16px;
-  border: 2px solid var(--border);
-  border-radius: 14px;
-  font-size: 15px;
-  font-family: 'Nunito', sans-serif;
-  font-weight: 600;
-  background: white;
-  outline: none;
-  margin-bottom: 16px;
-}
-
-.loading { text-align: center; padding: 40px; color: var(--subtext); font-weight: 700; }
-
-.tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-left: 8px; }
-.tag.owed { background: #d4f5ee; color: #0a7c5c; }
-.tag.owe { background: #ffe0e0; color: #c0392b; }
-```
-
+    /* --- TOAST NOTIFICATIONS --- */
+    #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 400px; }
+    .toast { padding: 16px; border-radius: var(--radius-md); color: white; font-weight: 600; text-align: center; box-shadow: var(--shadow); animation: slideDown 0.3s ease forwards; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
-<!-- ══ LOGIN ══ -->
+<div id="toast-container"></div>
 
-<div id="screen-login" class="screen active">
-  <div class="login-logo">💸</div>
-  <div class="login-title"><span>Split</span>Mate</div>
-  <div class="login-sub">Split expenses. Keep friends.</div>
+<main id="screen-login" class="screen active">
+  <div class="login-header">
+    <div style="font-size: 64px; margin-bottom: 16px;">💸</div>
+    <h1><span>Split</span>Mate</h1>
+    <p style="color: #94a3b8; margin-top: 8px;">Split expenses. Keep friends.</p>
+  </div>
   <div class="login-card">
-    <h2>Welcome back 👋</h2>
-    <p>Enter your email and we'll send you a magic login link</p>
+    <h2 style="margin-bottom: 8px;">Welcome back 👋</h2>
+    <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 14px;">Enter your email for a magic link.</p>
     <div class="input-group">
-      <label>Email address</label>
+      <label>Email Address</label>
       <input type="email" id="login-email" placeholder="you@example.com" />
     </div>
-    <button class="btn-primary" onclick="sendMagicLink()">Send Magic Link ✨</button>
-    <div id="login-msg"></div>
+    <button class="btn btn-primary" onclick="app.auth.sendMagicLink()">Send Magic Link ✨</button>
   </div>
-</div>
+</main>
 
-<!-- ══ HOME ══ -->
+<main id="screen-home" class="screen">
+  <header class="header-glass">
+    <div style="font-size: 14px; color: var(--text-muted); font-weight: 600;">Good to see you,</div>
+    <div id="home-username" style="font-size: 24px; font-weight: 800;">—</div>
+  </header>
+  
+  <div class="balance-card">
+    <div class="balance-label">Overall Balance</div>
+    <div class="balance-amount neutral" id="home-balance">€0.00</div>
+  </div>
 
-<div id="screen-home" class="screen">
-  <div class="home-header">
-    <div class="greeting">Good to see you,</div>
-    <div class="username" id="home-username">—</div>
-    <div class="net-balance">
-      <div>
-        <div class="label">Overall balance</div>
-        <div class="amount neutral" id="home-balance">€0.00</div>
-      </div>
-      <div style="font-size:32px">💰</div>
+  <div style="padding: 0 24px 16px; font-weight: 800; font-size: 18px;">Your Groups</div>
+  <div class="list-container" id="groups-list">
+    <div style="text-align: center; color: var(--text-muted); padding: 40px;">Loading groups...</div>
+  </div>
+
+  <button class="fab" onclick="document.getElementById('modal-create-group').showModal()">+</button>
+</main>
+
+<dialog id="modal-create-group">
+  <div class="modal-header">
+    <h2>New Group</h2>
+    <button class="close-btn" onclick="this.closest('dialog').close()">×</button>
+  </div>
+  <div class="input-group">
+    <label>Group Name</label>
+    <input type="text" id="new-group-name" placeholder="e.g. Ski Trip 🏔️" />
+  </div>
+  <div class="input-group">
+    <label>Add Member Email</label>
+    <div style="display: flex; gap: 8px;">
+      <input type="email" id="member-email-input" placeholder="friend@email.com" />
+      <button class="btn btn-primary" style="width: auto; padding: 0 20px;" onclick="app.groups.stageMember()">Add</button>
     </div>
   </div>
-  <div class="section-title">Your Groups</div>
-  <div class="groups-list" id="groups-list">
-    <div class="loading">Loading groups...</div>
-  </div>
-  <button class="fab" onclick="openCreateGroup()">+</button>
-</div>
-
-<!-- ══ GROUP DETAIL ══ -->
-
-<div id="screen-group" class="screen">
-  <div class="group-detail-header" id="group-header-bg">
-    <div class="back" onclick="showHome()">← Back</div>
-    <h1 id="group-detail-name">Group</h1>
-    <div class="member-chips" id="group-member-chips"></div>
-  </div>
-  <div class="balance-cards" id="balance-cards"></div>
-  <button class="settle-btn" onclick="openSettleModal()">🤝 Settle Up</button>
-  <div class="section-title">Expenses</div>
-  <div class="expenses-list" id="expenses-list">
-    <div class="loading">Loading...</div>
-  </div>
-  <button class="fab" onclick="openAddExpense()">+</button>
-</div>
-
-<!-- ══ CREATE GROUP MODAL ══ -->
-
-<div class="modal-overlay" id="modal-create-group">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <h2>Create Group</h2>
-    <div class="input-group">
-      <label>Group Name</label>
-      <input type="text" id="new-group-name" placeholder="e.g. Ibiza Trip 🏖️" />
-    </div>
-    <div class="input-group">
-      <label>Add Members (by email)</label>
-      <div id="member-search-list"></div>
-      <input type="email" id="member-email-input" placeholder="friend@email.com" style="margin-top:8px" />
-      <button class="btn-primary" style="margin-top:8px" onclick="addMemberToNewGroup()">+ Add Member</button>
-    </div>
-    <div id="pending-members" style="margin-bottom:16px"></div>
-    <button class="btn-primary" onclick="createGroup()">Create Group 🎉</button>
-    <div id="create-group-msg"></div>
-  </div>
-</div>
-
-<!-- ══ ADD EXPENSE MODAL ══ -->
-
-<div class="modal-overlay" id="modal-add-expense">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <h2>Add Expense</h2>
-    <div class="input-group">
-      <label>Description</label>
-      <input type="text" id="exp-desc" placeholder="e.g. Dinner at the beach" />
-    </div>
-    <div class="input-group">
-      <label>Amount</label>
-      <div style="display:flex;gap:8px">
-        <select id="exp-currency" style="width:90px;margin-bottom:0">
-          <option value="EUR">€ EUR</option>
-          <option value="USD">$ USD</option>
-          <option value="GBP">£ GBP</option>
-          <option value="CHF">CHF</option>
-          <option value="CZK">CZK</option>
-        </select>
-        <input type="number" id="exp-amount" placeholder="0.00" step="0.01" style="flex:1;margin-bottom:0" />
-      </div>
-    </div>
-    <div class="input-group" style="margin-top:16px">
-      <label>Paid by</label>
-      <select id="exp-paidby"></select>
-    </div>
-    <div class="input-group">
-      <label>Category</label>
-      <div class="category-grid" id="category-grid">
-        <button class="cat-btn active" data-cat="food_drinks" onclick="selectCat(this)"><span class="icon">🍔</span>Food</button>
-        <button class="cat-btn" data-cat="transport" onclick="selectCat(this)"><span class="icon">🚗</span>Transport</button>
-        <button class="cat-btn" data-cat="accommodation" onclick="selectCat(this)"><span class="icon">🏨</span>Hotel</button>
-        <button class="cat-btn" data-cat="activities" onclick="selectCat(this)"><span class="icon">🎉</span>Activities</button>
-        <button class="cat-btn" data-cat="shopping" onclick="selectCat(this)"><span class="icon">🛍️</span>Shopping</button>
-        <button class="cat-btn" data-cat="other" onclick="selectCat(this)"><span class="icon">📦</span>Other</button>
-      </div>
-    </div>
-    <div class="input-group">
-      <label>Split Method</label>
-      <div class="split-method-tabs">
-        <button class="split-tab active" onclick="selectSplit('equal', this)">Equal</button>
-        <button class="split-tab" onclick="selectSplit('exact', this)">Exact</button>
-        <button class="split-tab" onclick="selectSplit('percentage', this)">Percent</button>
-        <button class="split-tab" onclick="selectSplit('one_paid_all', this)">One paid</button>
-      </div>
-    </div>
-    <div class="input-group">
-      <label>Split between</label>
-      <div class="member-select-list" id="split-members"></div>
-    </div>
-    <button class="btn-primary" onclick="submitExpense()">Add Expense 💸</button>
-    <div id="add-expense-msg"></div>
-  </div>
-</div>
-
-<!-- ══ SETTLE MODAL ══ -->
-
-<div class="modal-overlay" id="modal-settle">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <h2>Settle Up 🤝</h2>
-    <p style="color:var(--subtext);font-size:14px;margin-bottom:16px">Simplified debts to minimize transactions</p>
-    <div id="settle-debts"></div>
-    <button class="btn-primary" style="background:linear-gradient(135deg,var(--orange),var(--coral));margin-top:16px" onclick="confirmSettle()">✅ Confirm — Mark All as Settled</button>
-    <button onclick="closeModal('modal-settle')" style="width:100%;padding:14px;border:none;background:none;font-size:15px;font-weight:700;color:var(--subtext);margin-top:8px;cursor:pointer">Cancel</button>
-  </div>
-</div>
+  <div id="pending-members" style="margin-bottom: 24px;"></div>
+  <button class="btn btn-primary" onclick="app.groups.create()">Create Group 🎉</button>
+</dialog>
 
 <script>
+// --- CONFIGURATION ---
+// Note: In production, NEVER expose a service_role key. Anon keys are fine if Row Level Security (RLS) is configured in Supabase.
 const SUPABASE_URL = 'https://vfxzgsywikkzayxwcsmk.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmeHpnc3l3aWtremF5eHdjc21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MDg0MzIsImV4cCI6MjA4ODQ4NDQzMn0.wYK18UAK22m6zCImMaHyCwcWILkGexaXCn0OzNrvd6c';
+const SUPABASE_KEY = 'YOUR_ANON_KEY'; // Replace with the actual Anon Key provided by Supabase
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let currentUser = null;
-let currentGroup = null;
-let currentGroupMembers = [];
-let pendingNewMembers = [];
-let selectedCategory = 'food_drinks';
-let selectedSplitMethod = 'equal';
+// --- APP STATE & LOGIC ---
+const app = {
+  state: {
+    user: null,
+    currentGroup: null,
+    stagedMembers: []
+  },
 
-const GROUP_COLORS = ['#6C63FF','#FF6B6B','#1CC29F','#FF9F43','#54A0FF','#FF6CAE'];
-const CAT_ICONS = { food_drinks:'🍔', transport:'🚗', accommodation:'🏨', activities:'🎉', shopping:'🛍️', other:'📦' };
-const CAT_COLORS = { food_drinks:'#fff3e0', transport:'#e3f2fd', accommodation:'#f3e5f5', activities:'#e8f5e9', shopping:'#fce4ec', other:'#f5f5f5' };
+  ui: {
+    showScreen: (screenId) => {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(`screen-${screenId}`).classList.add('active');
+    },
+    toast: (msg, type = 'success') => {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 4000);
+    },
+    formatMoney: (amount) => `€${parseFloat(Math.abs(amount)).toFixed(2)}`
+  },
 
-// ── AUTH ──
-async function sendMagicLink() {
-  const email = document.getElementById('login-email').value.trim();
-  const msg = document.getElementById('login-msg');
-  if (!email) { showMsg('login-msg', 'Please enter your email', 'error'); return; }
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
-  if (error) { showMsg('login-msg', error.message, 'error'); return; }
-  showMsg('login-msg', '✨ Magic link sent! Check your email and tap the link.', 'success');
-}
-
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (session?.user) {
-    currentUser = session.user;
-    await loadHome();
-    showScreen('home');
-  } else {
-    showScreen('login');
-  }
-});
-
-// ── HOME ──
-async function loadHome() {
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
-  document.getElementById('home-username').textContent = profile?.display_name || currentUser.email.split('@')[0];
-
-  const { data: memberships } = await sb.from('group_members').select('group_id').eq('user_id', currentUser.id);
-  if (!memberships?.length) { renderGroupsList([]); updateOverallBalance([]); return; }
-
-  const groupIds = memberships.map(m => m.group_id);
-  const { data: groups } = await sb.from('groups').select('*').in('id', groupIds);
-  renderGroupsList(groups || []);
-  await updateOverallBalance(groupIds);
-}
-
-async function updateOverallBalance(groupIds) {
-  if (!groupIds.length) return;
-  let total = 0;
-  for (const gid of groupIds) {
-    const bal = await getMyBalanceInGroup(gid);
-    total += bal;
-  }
-  const el = document.getElementById('home-balance');
-  el.textContent = formatCurrency(Math.abs(total), 'EUR');
-  el.className = 'amount ' + (total > 0.01 ? 'positive' : total < -0.01 ? 'negative' : 'neutral');
-}
-
-async function getMyBalanceInGroup(groupId) {
-  const { data: expenses } = await sb.from('expenses').select('*, expense_splits(*)').eq('group_id', groupId);
-  if (!expenses) return 0;
-  let balance = 0;
-  for (const exp of expenses) {
-    if (exp.paid_by === currentUser.id) {
-      const myShare = exp.expense_splits.find(s => s.user_id === currentUser.id)?.amount || 0;
-      balance += exp.amount - myShare;
-    } else {
-      const myShare = exp.expense_splits.find(s => s.user_id === currentUser.id)?.amount || 0;
-      balance -= myShare;
+  auth: {
+    init: () => {
+      sb.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+          app.state.user = session.user;
+          await app.home.load();
+          app.ui.showScreen('home');
+        } else {
+          app.ui.showScreen('login');
+        }
+      });
+    },
+    sendMagicLink: async () => {
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) return app.ui.toast('Please enter your email', 'error');
+      
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+      if (error) return app.ui.toast(error.message, 'error');
+      app.ui.toast('✨ Magic link sent! Check your inbox.');
     }
-  }
-  return balance;
-}
+  },
 
-function renderGroupsList(groups) {
-  const el = document.getElementById('groups-list');
-  if (!groups.length) {
-    el.innerHTML = `<div class="empty-state"><div class="emoji">👥</div><p>No groups yet</p><small>Tap + to create your first group</small></div>`;
-    return;
-  }
-  el.innerHTML = groups.map((g, i) => {
-    const color = GROUP_COLORS[i % GROUP_COLORS.length];
-    return `<div class="group-card" onclick="openGroup('${g.id}')">
-      <div class="group-icon" style="background:${color}20">
-        <span style="font-size:24px">👥</span>
-      </div>
-      <div class="group-info">
-        <div class="name">${g.name}</div>
-        <div class="members" id="gm-${g.id}">Loading...</div>
-      </div>
-      <div class="group-balance" id="gb-${g.id}">
-        <div class="amount" style="color:var(--subtext)">—</div>
-      </div>
-    </div>`;
-  }).join('');
+  home: {
+    load: async () => {
+      // 1. Fetch Profile
+      const { data: profile } = await sb.from('profiles').select('display_name').eq('id', app.state.user.id).single();
+      document.getElementById('home-username').textContent = profile?.display_name || app.state.user.email.split('@')[0];
 
-  groups.forEach(g => loadGroupCardDetails(g.id));
-}
+      // 2. Fetch Memberships & Groups
+      const { data: memberships } = await sb.from('group_members').select('group_id').eq('user_id', app.state.user.id);
+      if (!memberships?.length) return app.home.renderGroups([]);
 
-async function loadGroupCardDetails(groupId) {
-  const { data: members } = await sb.from('group_members').select('profiles(display_name, email)').eq('group_id', groupId);
-  const names = members?.map(m => m.profiles?.display_name || m.profiles?.email?.split('@')[0]) || [];
-  const memberEl = document.getElementById(`gm-${groupId}`);
-  if (memberEl) memberEl.textContent = names.join(', ');
-
-  const bal = await getMyBalanceInGroup(groupId);
-  const balEl = document.getElementById(`gb-${groupId}`);
-  if (balEl) {
-    const color = bal > 0.01 ? 'var(--teal)' : bal < -0.01 ? 'var(--coral)' : 'var(--subtext)';
-    const label = bal > 0.01 ? 'you are owed' : bal < -0.01 ? 'you owe' : 'settled up';
-    balEl.innerHTML = `<div class="amount" style="color:${color}">${formatCurrency(Math.abs(bal),'EUR')}</div><div class="label">${label}</div>`;
-  }
-}
-
-// ── CREATE GROUP ──
-function openCreateGroup() {
-  pendingNewMembers = [];
-  document.getElementById('new-group-name').value = '';
-  document.getElementById('member-email-input').value = '';
-  document.getElementById('pending-members').innerHTML = '';
-  document.getElementById('create-group-msg').innerHTML = '';
-  openModal('modal-create-group');
-}
-
-async function addMemberToNewGroup() {
-  const email = document.getElementById('member-email-input').value.trim();
-  if (!email) return;
-  if (pendingNewMembers.find(m => m.email === email)) { showMsg('create-group-msg','Already added','error'); return; }
-  const { data: profile } = await sb.from('profiles').select('*').eq('email', email).single();
-  if (!profile) { showMsg('create-group-msg', 'No user found with that email', 'error'); return; }
-  pendingNewMembers.push(profile);
-  document.getElementById('member-email-input').value = '';
-  renderPendingMembers();
-}
-
-function renderPendingMembers() {
-  document.getElementById('pending-members').innerHTML = pendingNewMembers.map(m =>
-    `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="font-weight:700">${m.display_name || m.email}</span>
-      <button onclick="removePendingMember('${m.id}')" style="background:none;border:none;color:var(--coral);font-size:18px;cursor:pointer">×</button>
-    </div>`
-  ).join('');
-}
-
-function removePendingMember(id) {
-  pendingNewMembers = pendingNewMembers.filter(m => m.id !== id);
-  renderPendingMembers();
-}
-
-async function createGroup() {
-  const name = document.getElementById('new-group-name').value.trim();
-  if (!name) { showMsg('create-group-msg', 'Enter a group name', 'error'); return; }
-
-  const { data: group, error } = await sb.from('groups').insert({ name, created_by: currentUser.id }).select().single();
-  if (error) { showMsg('create-group-msg', error.message, 'error'); return; }
-
-  const allMembers = [currentUser.id, ...pendingNewMembers.map(m => m.id)];
-  await sb.from('group_members').insert(allMembers.map(uid => ({ group_id: group.id, user_id: uid })));
-
-  closeModal('modal-create-group');
-  await loadHome();
-}
-
-// ── GROUP DETAIL ──
-async function openGroup(groupId) {
-  currentGroup = groupId;
-  const { data: group } = await sb.from('groups').select('*').eq('id', groupId).single();
-  const { data: members } = await sb.from('group_members').select('profiles(*)').eq('group_id', groupId);
-  currentGroupMembers = members?.map(m => m.profiles) || [];
-
-  const color = GROUP_COLORS[Math.floor(Math.random() * GROUP_COLORS.length)];
-  const header = document.getElementById('group-header-bg');
-  header.style.background = `linear-gradient(135deg, ${color}, ${color}bb)`;
-  document.getElementById('group-detail-name').textContent = group.name;
-
-  const chips = document.getElementById('group-member-chips');
-  chips.innerHTML = currentGroupMembers.map(m =>
-    `<div class="member-chip">${m.display_name || m.email.split('@')[0]}</div>`
-  ).join('');
-
-  showScreen('group');
-  await loadGroupDetail();
-}
-
-async function loadGroupDetail() {
-  await loadBalanceCards();
-  await loadExpenses();
-}
-
-async function loadBalanceCards() {
-  const { data: expenses } = await sb.from('expenses').select('*, expense_splits(*)').eq('group_id', currentGroup);
-  const balances = {};
-  currentGroupMembers.forEach(m => balances[m.id] = 0);
-
-  (expenses || []).forEach(exp => {
-    exp.expense_splits.forEach(split => {
-      if (exp.paid_by === split.user_id) return;
-      balances[exp.paid_by] = (balances[exp.paid_by] || 0) + split.amount;
-      balances[split.user_id] = (balances[split.user_id] || 0) - split.amount;
-    });
-  });
-
-  const cards = document.getElementById('balance-cards');
-  cards.innerHTML = currentGroupMembers.map(m => {
-    const bal = balances[m.id] || 0;
-    const cls = bal > 0.01 ? 'pos' : bal < -0.01 ? 'neg' : '';
-    const label = bal > 0.01 ? 'is owed' : bal < -0.01 ? 'owes' : 'settled';
-    return `<div class="balance-card">
-      <div class="person">${m.display_name || m.email.split('@')[0]}</div>
-      <div class="bal ${cls}">${formatCurrency(Math.abs(bal), 'EUR')}</div>
-      <div style="font-size:11px;color:var(--subtext)">${label}</div>
-    </div>`;
-  }).join('');
-}
-
-async function loadExpenses() {
-  const { data: expenses } = await sb.from('expenses')
-    .select('*, expense_splits(*), profiles!expenses_paid_by_fkey(display_name, email)')
-    .eq('group_id', currentGroup)
-    .order('created_at', { ascending: false });
-
-  const el = document.getElementById('expenses-list');
-  if (!expenses?.length) {
-    el.innerHTML = `<div class="empty-state"><div class="emoji">🧾</div><p>No expenses yet</p><small>Tap + to add one</small></div>`;
-    return;
-  }
-
-  el.innerHTML = expenses.map(exp => {
-    const myShare = exp.expense_splits.find(s => s.user_id === currentUser.id)?.amount || 0;
-    const paidBy = exp.profiles?.display_name || exp.profiles?.email?.split('@')[0] || 'Someone';
-    const icon = CAT_ICONS[exp.category] || '📦';
-    const bg = CAT_COLORS[exp.category] || '#f5f5f5';
-    return `<div class="expense-item">
-      <div class="expense-icon" style="background:${bg}">${icon}</div>
-      <div class="expense-info">
-        <div class="desc">${exp.description}</div>
-        <div class="meta">Paid by ${paidBy} · ${exp.currency}</div>
-      </div>
-      <div class="expense-amount">
-        <div class="total">${formatCurrency(exp.amount, exp.currency)}</div>
-        <div class="your-share">your share: ${formatCurrency(myShare, exp.currency)}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── ADD EXPENSE ──
-function openAddExpense() {
-  document.getElementById('exp-desc').value = '';
-  document.getElementById('exp-amount').value = '';
-  document.getElementById('add-expense-msg').innerHTML = '';
-  selectedCategory = 'food_drinks';
-  selectedSplitMethod = 'equal';
-
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('[data-cat="food_drinks"]').classList.add('active');
-  document.querySelectorAll('.split-tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.split-tab')[0].classList.add('active');
-
-  const paidBy = document.getElementById('exp-paidby');
-  paidBy.innerHTML = currentGroupMembers.map(m =>
-    `<option value="${m.id}" ${m.id === currentUser.id ? 'selected' : ''}>${m.display_name || m.email.split('@')[0]}</option>`
-  ).join('');
-
-  renderSplitMembers();
-  openModal('modal-add-expense');
-}
-
-function renderSplitMembers() {
-  const container = document.getElementById('split-members');
-  container.innerHTML = currentGroupMembers.map(m => {
-    const name = m.display_name || m.email.split('@')[0];
-    let input = '';
-    if (selectedSplitMethod === 'exact') {
-      input = `<input type="number" id="split-val-${m.id}" placeholder="0.00" step="0.01" />`;
-    } else if (selectedSplitMethod === 'percentage') {
-      input = `<input type="number" id="split-val-${m.id}" placeholder="0" min="0" max="100" />`;
-    } else {
-      input = `<input type="checkbox" id="split-val-${m.id}" checked />`;
-    }
-    return `<div class="member-select-item"><div class="name">${name}</div>${input}</div>`;
-  }).join('');
-}
-
-function selectCat(el) {
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  selectedCategory = el.dataset.cat;
-}
-
-function selectSplit(method, el) {
-  document.querySelectorAll('.split-tab').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  selectedSplitMethod = method;
-  renderSplitMembers();
-}
-
-async function submitExpense() {
-  const desc = document.getElementById('exp-desc').value.trim();
-  const amount = parseFloat(document.getElementById('exp-amount').value);
-  const currency = document.getElementById('exp-currency').value;
-  const paidBy = document.getElementById('exp-paidby').value;
-
-  if (!desc || !amount) { showMsg('add-expense-msg', 'Fill in description and amount', 'error'); return; }
-
-  let splits = [];
-  if (selectedSplitMethod === 'equal') {
-    const checked = currentGroupMembers.filter(m => document.getElementById(`split-val-${m.id}`)?.checked);
-    if (!checked.length) { showMsg('add-expense-msg', 'Select at least one person', 'error'); return; }
-    const share = Math.round((amount / checked.length) * 100) / 100;
-    splits = checked.map(m => ({ user_id: m.id, amount: share }));
-  } else if (selectedSplitMethod === 'one_paid_all') {
-    splits = currentGroupMembers.map(m => ({ user_id: m.id, amount: m.id === paidBy ? 0 : Math.round((amount / (currentGroupMembers.length - 1 || 1)) * 100) / 100 }));
-  } else if (selectedSplitMethod === 'exact') {
-    splits = currentGroupMembers.map(m => ({ user_id: m.id, amount: parseFloat(document.getElementById(`split-val-${m.id}`)?.value || 0) }));
-    const total = splits.reduce((a, b) => a + b.amount, 0);
-    if (Math.abs(total - amount) > 0.01) { showMsg('add-expense-msg', `Exact amounts must sum to ${formatCurrency(amount, currency)}`, 'error'); return; }
-  } else if (selectedSplitMethod === 'percentage') {
-    const totalPct = currentGroupMembers.reduce((a, m) => a + parseFloat(document.getElementById(`split-val-${m.id}`)?.value || 0), 0);
-    if (Math.abs(totalPct - 100) > 0.01) { showMsg('add-expense-msg', 'Percentages must sum to 100%', 'error'); return; }
-    splits = currentGroupMembers.map(m => {
-      const pct = parseFloat(document.getElementById(`split-val-${m.id}`)?.value || 0);
-      return { user_id: m.id, amount: Math.round((amount * pct / 100) * 100) / 100, percentage: pct };
-    });
-  }
-
-  const { data: exp, error } = await sb.from('expenses').insert({
-    group_id: currentGroup,
-    paid_by: paidBy,
-    description: desc,
-    amount,
-    currency,
-    category: selectedCategory,
-    split_method: selectedSplitMethod
-  }).select().single();
-
-  if (error) { showMsg('add-expense-msg', error.message, 'error'); return; }
-
-  await sb.from('expense_splits').insert(splits.map(s => ({ expense_id: exp.id, ...s })));
-
-  closeModal('modal-add-expense');
-  await loadGroupDetail();
-}
-
-// ── SETTLE ──
-async function openSettleModal() {
-  const { data: expenses } = await sb.from('expenses').select('*, expense_splits(*)').eq('group_id', currentGroup);
-  const net = {};
-  currentGroupMembers.forEach(m => net[m.id] = 0);
-
-  (expenses || []).forEach(exp => {
-    exp.expense_splits.forEach(split => {
-      if (exp.paid_by === split.user_id) return;
-      net[exp.paid_by] = (net[exp.paid_by] || 0) + split.amount;
-      net[split.user_id] = (net[split.user_id] || 0) - split.amount;
-    });
-  });
-
-  const debts = simplifyDebts(net);
-  const el = document.getElementById('settle-debts');
-
-  if (!debts.length) {
-    el.innerHTML = `<div class="empty-state"><div class="emoji">🎉</div><p>All settled up!</p></div>`;
-  } else {
-    el.innerHTML = debts.map(d => {
-      const from = currentGroupMembers.find(m => m.id === d.from);
-      const to = currentGroupMembers.find(m => m.id === d.to);
-      const fromName = from?.display_name || from?.email.split('@')[0];
-      const toName = to?.display_name || to?.email.split('@')[0];
-      return `<div class="debt-item">
-        <div class="debt-arrow">
-          <span>${fromName}</span>
-          <span class="arrow">→</span>
-          <span>${toName}</span>
+      const groupIds = memberships.map(m => m.group_id);
+      const { data: groups } = await sb.from('groups').select('*').in('id', groupIds);
+      
+      app.home.renderGroups(groups || []);
+      // Balance calculation logic would go here
+    },
+    renderGroups: (groups) => {
+      const container = document.getElementById('groups-list');
+      if (!groups.length) {
+        container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">No groups yet. Tap + to start!</div>`;
+        return;
+      }
+      container.innerHTML = groups.map(g => `
+        <div class="card" onclick="/* Navigate to group detail */">
+          <div class="card-icon">👥</div>
+          <div class="card-content">
+            <div class="card-title">${g.name}</div>
+            <div class="card-subtitle">Tap to view details</div>
+          </div>
         </div>
-        <div class="debt-amt">${formatCurrency(d.amount, 'EUR')}</div>
-      </div>`;
-    }).join('');
-  }
+      `).join('');
+    }
+  },
 
-  openModal('modal-settle');
-}
+  groups: {
+    stageMember: async () => {
+      const email = document.getElementById('member-email-input').value.trim();
+      if (!email) return;
+      if (app.state.stagedMembers.find(m => m.email === email)) return app.ui.toast('Already added', 'error');
+      
+      // Look up user
+      const { data: profile } = await sb.from('profiles').select('*').eq('email', email).single();
+      if (!profile) return app.ui.toast('User not found. They must sign in first.', 'error');
+      
+      app.state.stagedMembers.push(profile);
+      document.getElementById('member-email-input').value = '';
+      
+      // Render staged members
+      const container = document.getElementById('pending-members');
+      container.innerHTML = app.state.stagedMembers.map(m => `
+        <div style="display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600;">
+          ${m.display_name || m.email}
+          <span style="color: var(--danger); cursor: pointer;" onclick="/* remove logic */">Remove</span>
+        </div>
+      `).join('');
+    },
+    create: async () => {
+      const name = document.getElementById('new-group-name').value.trim();
+      if (!name) return app.ui.toast('Enter a group name', 'error');
 
-function simplifyDebts(net) {
-  const creditors = [], debtors = [];
-  Object.entries(net).forEach(([id, bal]) => {
-    if (bal > 0.01) creditors.push({ id, bal });
-    else if (bal < -0.01) debtors.push({ id, bal: -bal });
-  });
+      // Create Group
+      const { data: group, error } = await sb.from('groups').insert({ name, created_by: app.state.user.id }).select().single();
+      if (error) return app.ui.toast(error.message, 'error');
 
-  const result = [];
-  let ci = 0, di = 0;
-  while (ci < creditors.length && di < debtors.length) {
-    const c = creditors[ci], d = debtors[di];
-    const amount = Math.min(c.bal, d.bal);
-    result.push({ from: d.id, to: c.id, amount: Math.round(amount * 100) / 100 });
-    c.bal -= amount;
-    d.bal -= amount;
-    if (c.bal < 0.01) ci++;
-    if (d.bal < 0.01) di++;
-  }
-  return result;
-}
+      // Add Members
+      const allMembers = [app.state.user.id, ...app.state.stagedMembers.map(m => m.id)];
+      await sb.from('group_members').insert(allMembers.map(uid => ({ group_id: group.id, user_id: uid })));
 
-async function confirmSettle() {
-  await sb.from('settlements').insert({ group_id: currentGroup, settled_by: currentUser.id });
+      document.getElementById('modal-create-group').close();
+      app.ui.toast('Group created!');
+      app.home.load();
+    }
+  },
+  
+  // NOTE: In a real app, the 'Settle' function should look like this:
+  // settleUp: async (debtorId, creditorId, amount) => {
+  //   await sb.from('expenses').insert({
+  //     group_id: app.state.currentGroup,
+  //     paid_by: debtorId,
+  //     description: 'Payment',
+  //     amount: amount,
+  //     is_settlement: true // New column to distinguish from normal expenses
+  //   });
+  //   // Then add a split allocating the -amount to the creditor.
+  // }
+};
 
-  // Delete all expenses in this group (settlement wipes slate)
-  const { data: exps } = await sb.from('expenses').select('id').eq('group_id', currentGroup);
-  if (exps?.length) {
-    const ids = exps.map(e => e.id);
-    await sb.from('expense_splits').delete().in('expense_id', ids);
-    await sb.from('expenses').delete().eq('group_id', currentGroup);
-  }
-
-  closeModal('modal-settle');
-  await loadGroupDetail();
-  await loadHome();
-}
-
-// ── UTILS ──
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(`screen-${name}`).classList.add('active');
-  window.scrollTo(0, 0);
-}
-
-function showHome() { showScreen('home'); loadHome(); }
-
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
-});
-
-function showMsg(id, text, type) {
-  const el = document.getElementById(id);
-  el.innerHTML = `<div class="msg ${type}">${text}</div>`;
-}
-
-function formatCurrency(amount, currency = 'EUR') {
-  const symbols = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ', CZK: 'CZK ' };
-  return (symbols[currency] || '') + parseFloat(amount || 0).toFixed(2);
-}
+// Initialize app
+app.auth.init();
 </script>
-
 </body>
 </html>
