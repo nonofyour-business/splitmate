@@ -110,7 +110,6 @@
 .balance-card .bal-lbl { font-size: 11px; color: var(--subtext); margin-top: 2px; }
 .settle-btn { margin: 0 16px 6px; width: calc(100% - 32px); padding: 13px; background: linear-gradient(135deg, var(--orange), var(--coral)); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; }
 .expenses-list { padding: 0 16px 100px; }
-.expense-item { background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .expense-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
 .expense-info { flex: 1; min-width: 0; }
 .expense-info .desc { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -133,6 +132,20 @@
 .member-split-item .mname { font-weight: 700; font-size: 15px; }
 .member-split-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--teal); }
 .member-split-item input[type="number"] { width: 80px; padding: 7px 10px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 700; text-align: right; font-family: 'Nunito', sans-serif; outline: none; }
+
+/* SWIPE EXPENSE */
+.expense-wrapper { position: relative; margin-bottom: 10px; border-radius: 16px; overflow: hidden; }
+.expense-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
+.expense-action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 72px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; color: white; }
+.expense-action-btn.edit { background: var(--blue); }
+.expense-action-btn.delete { background: var(--coral); }
+.expense-item { background: white; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; transform: translateX(0); transition: transform 0.25s ease; will-change: transform; cursor: grab; }
+.expense-item.swiped { transform: translateX(-144px); border-radius: 16px 0 0 16px; }
+
+/* SPLIT SUMMARY BAR */
+.split-summary { margin-top: 10px; padding: 12px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.split-summary.ok { background: #d4f5ee; color: #0a7c5c; }
+.split-summary.bad { background: #ffe0e0; color: #c0392b; }
 
 /* SETTLE */
 .debt-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
@@ -516,12 +529,88 @@ async function loadExpenses() {
     const payer = currentGroupMembers.find(m => m.id === exp.paid_by)?.name || 'Someone';
     const myShare = exp.expense_splits.find(s => s.member_id === currentMember.id)?.amount || 0;
     const date = new Date(exp.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-    return `<div class="expense-item">
-      <div class="expense-icon" style="background:${CAT_COLORS[exp.category]||'#f5f5f5'}">${CAT_ICONS[exp.category]||'📦'}</div>
-      <div class="expense-info"><div class="desc">${exp.description}</div><div class="meta">${payer} paid · ${date}</div></div>
-      <div class="expense-amount"><div class="total">${fmt(exp.amount, exp.currency)}</div><div class="share">your share: ${fmt(myShare, exp.currency)}</div></div>
+    return `<div class="expense-wrapper" id="wrap-${exp.id}">
+      <div class="expense-actions">
+        <button class="expense-action-btn edit" onclick="openEditExpense('${exp.id}')">✏️<span>Edit</span></button>
+        <button class="expense-action-btn delete" onclick="deleteExpense('${exp.id}')">🗑️<span>Delete</span></button>
+      </div>
+      <div class="expense-item" id="exp-${exp.id}">
+        <div class="expense-icon" style="background:${CAT_COLORS[exp.category]||'#f5f5f5'}">${CAT_ICONS[exp.category]||'📦'}</div>
+        <div class="expense-info"><div class="desc">${exp.description}</div><div class="meta">${payer} paid · ${date}</div></div>
+        <div class="expense-amount"><div class="total">${fmt(exp.amount, exp.currency)}</div><div class="share">your share: ${fmt(myShare, exp.currency)}</div></div>
+      </div>
     </div>`;
   }).join('');
+  initSwipe();
+}
+
+function initSwipe() {
+  document.querySelectorAll('.expense-item').forEach(item => {
+    let startX = 0, startY = 0, isDragging = false;
+    item.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = false; }, { passive: true });
+    item.addEventListener('touchmove', e => {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!isDragging && Math.abs(dy) > Math.abs(dx)) return;
+      isDragging = true;
+    }, { passive: true });
+    item.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 40) return;
+      const alreadySwiped = item.classList.contains('swiped');
+      // close all others
+      document.querySelectorAll('.expense-item.swiped').forEach(i => i.classList.remove('swiped'));
+      if (dx < -40 && !alreadySwiped) item.classList.add('swiped');
+    });
+  });
+  // tap anywhere else closes swipes
+  document.getElementById('expenses-list').addEventListener('click', e => {
+    if (!e.target.closest('.expense-action-btn')) {
+      document.querySelectorAll('.expense-item.swiped').forEach(i => i.classList.remove('swiped'));
+    }
+  });
+}
+
+async function deleteExpense(id) {
+  if (!confirm('Delete this expense?')) return;
+  await sb.from('expense_splits').delete().eq('expense_id', id);
+  await sb.from('expenses').delete().eq('id', id);
+  await loadGroupDetail();
+}
+
+let editingExpenseId = null;
+async function openEditExpense(id) {
+  document.querySelectorAll('.expense-item.swiped').forEach(i => i.classList.remove('swiped'));
+  const { data: exp } = await sb.from('expenses').select('*, expense_splits(*)').eq('id', id).single();
+  if (!exp) return;
+  editingExpenseId = id;
+
+  document.getElementById('exp-desc').value = exp.description;
+  document.getElementById('exp-amount').value = exp.amount;
+  document.getElementById('exp-currency').value = exp.currency || 'EUR';
+  document.getElementById('exp-paidby').innerHTML = currentGroupMembers.map(m =>
+    `<option value="${m.id}" ${m.id===exp.paid_by?'selected':''}>${m.name}</option>`).join('');
+
+  selectedCategory = exp.category || 'food_drinks';
+  selectedSplitMethod = exp.split_method || 'exact';
+
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === selectedCategory));
+  document.querySelectorAll('.split-tab').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(selectedSplitMethod.replace('_',' ').split(' ')[0])));
+
+  renderSplitMembers();
+  // pre-fill split values
+  exp.expense_splits.forEach(s => {
+    const el = document.getElementById(`sv-${s.member_id}`);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = s.amount > 0;
+    else el.value = selectedSplitMethod === 'percentage' ? (s.percentage || 0) : s.amount;
+  });
+  updateSplitSummary();
+
+  document.getElementById('modal-add-expense').querySelector('h2').textContent = 'Edit Expense';
+  document.getElementById('add-expense-msg').innerHTML = '';
+  openModal('modal-add-expense');
 }
 
 async function deleteCurrentGroup() {
@@ -537,26 +626,56 @@ async function deleteCurrentGroup() {
 }
 
 function openAddExpense() {
+  editingExpenseId = null;
   document.getElementById('exp-desc').value = '';
   document.getElementById('exp-amount').value = '';
   document.getElementById('add-expense-msg').innerHTML = '';
-  selectedCategory = 'food_drinks'; selectedSplitMethod = 'equal';
+  selectedCategory = 'food_drinks'; selectedSplitMethod = 'exact';
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('[data-cat="food_drinks"]').classList.add('active');
-  document.querySelectorAll('.split-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.querySelectorAll('.split-tab').forEach(b => b.classList.toggle('active', b.textContent === 'Exact'));
   document.getElementById('exp-paidby').innerHTML = currentGroupMembers.map(m =>
     `<option value="${m.id}" ${m.id===currentMember.id?'selected':''}>${m.name}</option>`).join('');
+  document.getElementById('modal-add-expense').querySelector('h2').textContent = 'Add Expense';
   renderSplitMembers();
   openModal('modal-add-expense');
 }
 
+function updateSplitSummary() {
+  const amount = parseFloat(document.getElementById('exp-amount')?.value || 0);
+  const el = document.getElementById('split-summary');
+  if (!el) return;
+  if (selectedSplitMethod === 'equal' || selectedSplitMethod === 'one_paid_all') { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  if (selectedSplitMethod === 'exact') {
+    const entered = currentGroupMembers.reduce((a,m) => a + parseFloat(document.getElementById(`sv-${m.id}`)?.value||0), 0);
+    const diff = round(amount - entered);
+    const ok = Math.abs(diff) < 0.01;
+    el.className = `split-summary ${ok?'ok':'bad'}`;
+    el.innerHTML = ok
+      ? `<span>✅ Splits match total</span><span>${fmt(entered)}</span>`
+      : `<span>${diff > 0 ? `€${fmt(diff)} remaining` : `Over by €${fmt(Math.abs(diff))}`}</span><span>${fmt(entered)} / ${fmt(amount)}</span>`;
+  } else if (selectedSplitMethod === 'percentage') {
+    const total = currentGroupMembers.reduce((a,m) => a + parseFloat(document.getElementById(`sv-${m.id}`)?.value||0), 0);
+    const ok = Math.abs(total - 100) < 0.01;
+    el.className = `split-summary ${ok?'ok':'bad'}`;
+    el.innerHTML = ok
+      ? `<span>✅ 100% allocated</span><span>100%</span>`
+      : `<span>${total < 100 ? `${round(100-total)}% remaining` : `Over by ${round(total-100)}%`}</span><span>${round(total)}% / 100%</span>`;
+  }
+}
+
 function renderSplitMembers() {
+  const isNumeric = selectedSplitMethod === 'exact' || selectedSplitMethod === 'percentage';
   document.getElementById('split-members').innerHTML = currentGroupMembers.map(m => {
     const input = selectedSplitMethod === 'equal'
       ? `<input type="checkbox" id="sv-${m.id}" checked />`
-      : `<input type="number" id="sv-${m.id}" placeholder="${selectedSplitMethod==='percentage'?'0':'0.00'}" step="${selectedSplitMethod==='percentage'?'1':'0.01'}" />`;
+      : `<input type="number" id="sv-${m.id}" placeholder="${selectedSplitMethod==='percentage'?'0':'0.00'}" step="${selectedSplitMethod==='percentage'?'1':'0.01'}" oninput="updateSplitSummary()" />`;
     return `<div class="member-split-item"><div class="mname">${m.name}</div>${input}</div>`;
-  }).join('');
+  }).join('') + (isNumeric ? `<div id="split-summary" class="split-summary bad" style="display:none"><span>Enter amounts above</span></div>` : '');
+  // wire amount field too
+  const amtField = document.getElementById('exp-amount');
+  if (amtField) amtField.oninput = updateSplitSummary;
 }
 
 function selectCat(el) { document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); selectedCategory = el.dataset.cat; }
@@ -588,9 +707,20 @@ async function submitExpense() {
     splits = currentGroupMembers.map(m => { const pct=parseFloat(document.getElementById(`sv-${m.id}`)?.value||0); return { member_id:m.id, amount:round(amount*pct/100), percentage:pct }; });
   }
 
-  const { data: exp, error } = await sb.from('expenses').insert({ group_id: currentGroup, paid_by: paidBy, description: desc, amount, currency, category: selectedCategory, split_method: selectedSplitMethod }).select().single();
-  if (error) { showMsg('add-expense-msg', error.message, 'error'); return; }
-  await sb.from('expense_splits').insert(splits.map(s => ({ expense_id: exp.id, ...s })));
+  if (editingExpenseId) {
+    // UPDATE existing
+    const { error } = await sb.from('expenses').update({ paid_by: paidBy, description: desc, amount, currency, category: selectedCategory, split_method: selectedSplitMethod }).eq('id', editingExpenseId);
+    if (error) { showMsg('add-expense-msg', error.message, 'error'); return; }
+    await sb.from('expense_splits').delete().eq('expense_id', editingExpenseId);
+    await sb.from('expense_splits').insert(splits.map(s => ({ expense_id: editingExpenseId, ...s })));
+    editingExpenseId = null;
+  } else {
+    // INSERT new
+    const { data: exp, error } = await sb.from('expenses').insert({ group_id: currentGroup, paid_by: paidBy, description: desc, amount, currency, category: selectedCategory, split_method: selectedSplitMethod }).select().single();
+    if (error) { showMsg('add-expense-msg', error.message, 'error'); return; }
+    await sb.from('expense_splits').insert(splits.map(s => ({ expense_id: exp.id, ...s })));
+  }
+
   closeModal('modal-add-expense');
   await loadGroupDetail();
 }
