@@ -11,6 +11,7 @@
   <title>SplitMate</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -55,17 +56,24 @@
 .home-toolbar { display: flex; align-items: center; justify-content: space-between; }
 .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--subtext); padding: 18px 20px 10px; }
 
-/* GROUPS */
+/* GROUPS — swipeable */
 .groups-list { padding: 0 16px 100px; flex: 1; }
-.group-card { background: white; border-radius: 20px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.1s; }
-.group-card:active { transform: scale(0.98); }
+.group-wrapper { position: relative; margin-bottom: 12px; border-radius: 20px; overflow: hidden; }
+.group-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; border-radius: 0 20px 20px 0; overflow: hidden; }
+.group-action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 76px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; color: white; }
+.group-action-btn.edit { background: var(--blue); }
+.group-action-btn.del { background: var(--coral); }
+.group-card { background: white; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer; position: relative; transform: translateX(0); transition: transform 0.0s; will-change: transform; touch-action: pan-y; }
+.group-card.snapping { transition: transform 0.22s ease; }
+.group-card.swiped { transform: translateX(-152px); border-radius: 20px 0 0 20px; }
 .group-icon { width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-.group-info { flex: 1; min-width: 0; }
+.group-info { flex: 1; min-width: 0; pointer-events: none; }
 .group-info .name { font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .group-info .members { font-size: 12px; color: var(--subtext); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.group-balance { text-align: right; flex-shrink: 0; }
+.group-balance { text-align: right; flex-shrink: 0; pointer-events: none; }
 .group-balance .amt { font-size: 15px; font-weight: 900; }
 .group-balance .lbl { font-size: 11px; color: var(--subtext); }
+
 .empty-state { text-align: center; padding: 60px 20px; color: var(--subtext); }
 .empty-state .emoji { font-size: 48px; margin-bottom: 14px; }
 .empty-state p { font-size: 16px; font-weight: 700; }
@@ -96,7 +104,6 @@
 .group-detail-header { padding: 52px 20px 20px; color: white; position: sticky; top: 0; z-index: 100; }
 .back-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .back-row .back { color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 700; cursor: pointer; }
-.del-group-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; }
 .group-detail-header h1 { font-size: 26px; font-weight: 900; }
 .member-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .member-chip { background: rgba(255,255,255,0.18); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
@@ -108,13 +115,28 @@
 .balance-card .bal.pos { color: var(--teal); }
 .balance-card .bal.neg { color: var(--coral); }
 .balance-card .bal-lbl { font-size: 11px; color: var(--subtext); margin-top: 2px; }
-.settle-btn { margin: 0 16px 6px; width: calc(100% - 32px); padding: 13px; background: linear-gradient(135deg, var(--orange), var(--coral)); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 800; cursor: pointer; }
+
+/* SETTLE + CHART row */
+.action-row { display: flex; gap: 10px; padding: 0 16px 6px; }
+.action-row button { flex: 1; padding: 13px 8px; border: none; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; color: white; }
+.btn-settle { background: linear-gradient(135deg, var(--orange), var(--coral)); }
+.btn-chart { background: linear-gradient(135deg, var(--purple), var(--blue)); }
+
+/* EXPENSES — swipeable */
 .expenses-list { padding: 0 16px 100px; }
+.expense-wrapper { position: relative; margin-bottom: 10px; border-radius: 16px; overflow: hidden; }
+.expense-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
+.expense-action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 72px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; color: white; }
+.expense-action-btn.edit { background: var(--blue); }
+.expense-action-btn.delete { background: var(--coral); }
+.expense-item { background: white; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; transform: translateX(0); will-change: transform; touch-action: pan-y; }
+.expense-item.snapping { transition: transform 0.22s ease; }
+.expense-item.swiped { transform: translateX(-144px); border-radius: 16px 0 0 16px; }
 .expense-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-.expense-info { flex: 1; min-width: 0; }
+.expense-info { flex: 1; min-width: 0; pointer-events: none; }
 .expense-info .desc { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .expense-info .meta { font-size: 12px; color: var(--subtext); margin-top: 2px; }
-.expense-amount { text-align: right; flex-shrink: 0; }
+.expense-amount { text-align: right; flex-shrink: 0; pointer-events: none; }
 .expense-amount .total { font-size: 16px; font-weight: 900; }
 .expense-amount .share { font-size: 11px; color: var(--subtext); }
 
@@ -133,16 +155,7 @@
 .member-split-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--teal); }
 .member-split-item input[type="number"] { width: 80px; padding: 7px 10px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 700; text-align: right; font-family: 'Nunito', sans-serif; outline: none; }
 
-/* SWIPE EXPENSE */
-.expense-wrapper { position: relative; margin-bottom: 10px; border-radius: 16px; overflow: hidden; }
-.expense-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
-.expense-action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 72px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; color: white; }
-.expense-action-btn.edit { background: var(--blue); }
-.expense-action-btn.delete { background: var(--coral); }
-.expense-item { background: white; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; transform: translateX(0); transition: transform 0.25s ease; will-change: transform; cursor: grab; }
-.expense-item.swiped { transform: translateX(-144px); border-radius: 16px 0 0 16px; }
-
-/* SPLIT SUMMARY BAR */
+/* SPLIT SUMMARY */
 .split-summary { margin-top: 10px; padding: 12px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
 .split-summary.ok { background: #d4f5ee; color: #0a7c5c; }
 .split-summary.bad { background: #ffe0e0; color: #c0392b; }
@@ -153,6 +166,12 @@
 .debt-from-to { font-size: 14px; font-weight: 700; }
 .debt-arrow { color: var(--coral); margin: 0 4px; }
 .debt-amt { font-size: 18px; font-weight: 900; color: var(--coral); }
+
+/* CHART MODAL */
+.chart-container { position: relative; width: 100%; height: 280px; margin: 8px 0 16px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
 /* SETTINGS */
 #screen-settings { background: var(--bg); }
@@ -167,6 +186,9 @@
 .add-member-row input { flex: 1; padding: 13px 16px; border: 2px solid var(--border); border-radius: 14px; font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 600; outline: none; }
 .add-member-row input:focus { border-color: var(--teal); }
 .add-member-row button { background: var(--teal); color: white; border: none; padding: 13px 20px; border-radius: 14px; font-size: 22px; font-weight: 900; cursor: pointer; }
+
+/* EDIT GROUP NAME MODAL */
+#modal-edit-group .modal h2 { margin-bottom: 16px; }
 ```
 
   </style>
@@ -216,13 +238,15 @@
   <div class="group-detail-header" id="group-header-bg">
     <div class="back-row">
       <div class="back" onclick="showHome()">← Back</div>
-      <button class="del-group-btn" onclick="deleteCurrentGroup()">Delete Group</button>
     </div>
     <h1 id="group-detail-name">Group</h1>
     <div class="member-chips" id="group-member-chips"></div>
   </div>
   <div class="balance-cards" id="balance-cards"></div>
-  <button class="settle-btn" onclick="openSettleModal()">🤝 Settle Up</button>
+  <div class="action-row">
+    <button class="action-row button btn-settle" onclick="openSettleModal()">🤝 Settle Up</button>
+    <button class="action-row button btn-chart" onclick="openChartModal()">📊 Chart</button>
+  </div>
   <div class="section-title">Expenses</div>
   <div class="expenses-list" id="expenses-list"></div>
   <button class="fab" onclick="openAddExpense()">+</button>
@@ -277,12 +301,27 @@
   </div>
 </div>
 
-<!-- ADD EXPENSE MODAL -->
+<!-- EDIT GROUP MODAL -->
+
+<div class="modal-overlay" id="modal-edit-group">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Rename Group</h2>
+    <div class="input-group">
+      <label>Group Name</label>
+      <input type="text" id="edit-group-name" placeholder="Group name" />
+    </div>
+    <button class="btn-primary" onclick="saveGroupName()">Save</button>
+    <button class="btn-cancel" onclick="closeModal('modal-edit-group')">Cancel</button>
+  </div>
+</div>
+
+<!-- ADD / EDIT EXPENSE MODAL -->
 
 <div class="modal-overlay" id="modal-add-expense">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h2>Add Expense</h2>
+    <h2 id="expense-modal-title">Add Expense</h2>
     <div class="input-group">
       <label>Description</label>
       <input type="text" id="exp-desc" placeholder="e.g. Dinner at the beach" />
@@ -318,8 +357,8 @@
     <div class="input-group">
       <label>Split Method</label>
       <div class="split-tabs">
-        <button class="split-tab active" onclick="selectSplit('equal',this)">Equal</button>
-        <button class="split-tab" onclick="selectSplit('exact',this)">Exact</button>
+        <button class="split-tab" onclick="selectSplit('equal',this)">Equal</button>
+        <button class="split-tab active" onclick="selectSplit('exact',this)">Exact</button>
         <button class="split-tab" onclick="selectSplit('percentage',this)">Percent</button>
         <button class="split-tab" onclick="selectSplit('one_paid_all',this)">One paid</button>
       </div>
@@ -328,7 +367,7 @@
       <label>Split between</label>
       <div class="member-split-list" id="split-members"></div>
     </div>
-    <button class="btn-primary" onclick="submitExpense()">Add Expense 💸</button>
+    <button class="btn-primary" onclick="submitExpense()">Save Expense 💸</button>
     <div id="add-expense-msg"></div>
     <button class="btn-cancel" onclick="closeModal('modal-add-expense')">Cancel</button>
   </div>
@@ -347,6 +386,21 @@
   </div>
 </div>
 
+<!-- CHART MODAL -->
+
+<div class="modal-overlay" id="modal-chart">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Cumulative Spend 📊</h2>
+    <p style="color:var(--subtext);font-size:13px;margin-bottom:12px">Each person's running total as expenses are added</p>
+    <div class="chart-legend" id="chart-legend"></div>
+    <div class="chart-container">
+      <canvas id="spend-chart"></canvas>
+    </div>
+    <button class="btn-cancel" onclick="closeModal('modal-chart')">Close</button>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://vfxzgsywikkzayxwcsmk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmeHpnc3l3aWtremF5eHdjc21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MDg0MzIsImV4cCI6MjA4ODQ4NDQzMn0.wYK18UAK22m6zCImMaHyCwcWILkGexaXCn0OzNrvd6c';
@@ -356,23 +410,19 @@ const COLORS = ['#6C63FF','#FF6B6B','#1CC29F','#FF9F43','#54A0FF','#FF6CAE','#A2
 const CAT_ICONS = { food_drinks:'🍔', transport:'🚗', accommodation:'🏨', activities:'🎉', shopping:'🛍️', other:'📦' };
 const CAT_COLORS = { food_drinks:'#fff3e0', transport:'#e3f2fd', accommodation:'#f3e5f5', activities:'#e8f5e9', shopping:'#fce4ec', other:'#f5f5f5' };
 
-let currentMember = null;
-let allMembers = [];
-let currentGroup = null;
-let currentGroupMembers = [];
-let selectedCategory = 'food_drinks';
-let selectedSplitMethod = 'equal';
+let currentMember = null, allMembers = [], currentGroup = null, currentGroupMembers = [];
+let selectedCategory = 'food_drinks', selectedSplitMethod = 'exact';
+let editingExpenseId = null, editingGroupId = null;
+let spendChart = null;
 
+// ── INIT ──
 async function init() {
   await loadAllMembers();
   const savedId = localStorage.getItem('splitmate_member_id');
   if (savedId && allMembers.find(m => m.id === savedId)) {
     currentMember = allMembers.find(m => m.id === savedId);
     await showHome();
-  } else {
-    renderNamePicker();
-    showScreen('pick');
-  }
+  } else { renderNamePicker(); showScreen('pick'); }
 }
 
 async function loadAllMembers() {
@@ -381,12 +431,10 @@ async function loadAllMembers() {
 }
 
 function renderNamePicker() {
-  document.getElementById('name-grid').innerHTML = allMembers.map((m, i) =>
+  document.getElementById('name-grid').innerHTML = allMembers.map((m,i) =>
     `<button class="name-btn" onclick="pickName('${m.id}')">
-      <div class="avatar" style="background:${COLORS[i%COLORS.length]}">${m.name[0].toUpperCase()}</div>
-      ${m.name}
-    </button>`
-  ).join('');
+      <div class="avatar" style="background:${COLORS[i%COLORS.length]}">${m.name[0].toUpperCase()}</div>${m.name}
+    </button>`).join('');
 }
 
 function pickName(id) {
@@ -395,6 +443,7 @@ function pickName(id) {
   showHome();
 }
 
+// ── HOME ──
 async function showHome() {
   document.getElementById('home-username').textContent = currentMember?.name || '—';
   showScreen('home');
@@ -413,16 +462,83 @@ async function loadGroups() {
   const { data: groups } = await sb.from('groups').select('*').in('id', groupIds).order('created_at', { ascending: false });
   el.innerHTML = (groups||[]).map((g,i) => {
     const color = COLORS[i%COLORS.length];
-    return `<div class="group-card" onclick="openGroup('${g.id}')">
-      <div class="group-icon" style="background:${color}22">👥</div>
-      <div class="group-info">
-        <div class="name">${g.name}</div>
-        <div class="members" id="gm-${g.id}">...</div>
+    return `<div class="group-wrapper" id="gwrap-${g.id}">
+      <div class="group-actions">
+        <button class="group-action-btn edit" onclick="openEditGroup('${g.id}','${g.name.replace(/'/g,"\\'")}')">✏️<span>Edit</span></button>
+        <button class="group-action-btn del" onclick="deleteGroup('${g.id}')">🗑️<span>Delete</span></button>
       </div>
-      <div class="group-balance" id="gb-${g.id}"><div class="amt" style="color:var(--subtext)">—</div></div>
+      <div class="group-card" id="gcard-${g.id}" data-gid="${g.id}">
+        <div class="group-icon" style="background:${color}22">👥</div>
+        <div class="group-info">
+          <div class="name">${g.name}</div>
+          <div class="members" id="gm-${g.id}">...</div>
+        </div>
+        <div class="group-balance" id="gb-${g.id}"><div class="amt" style="color:var(--subtext)">—</div></div>
+      </div>
     </div>`;
   }).join('');
+  initGroupSwipe();
   (groups||[]).forEach(g => loadGroupCardInfo(g.id));
+}
+
+function initGroupSwipe() {
+  document.querySelectorAll('.group-card').forEach(card => {
+    let startX=0, startY=0, curX=0, dragging=false, hasMoved=false;
+    const SNAP = 152;
+
+    card.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      curX = card.classList.contains('swiped') ? -SNAP : 0;
+      dragging = true; hasMoved = false;
+      card.classList.remove('snapping');
+    }, { passive: true });
+
+    card.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!hasMoved && Math.abs(dy) > Math.abs(dx)) { dragging = false; return; }
+      hasMoved = true;
+      const newX = Math.max(-SNAP, Math.min(0, curX + dx));
+      card.style.transform = `translateX(${newX}px)`;
+    }, { passive: true });
+
+    card.addEventListener('touchend', e => {
+      if (!dragging) return;
+      dragging = false;
+      card.classList.add('snapping');
+      const dx = e.changedTouches[0].clientX - startX;
+      if (!hasMoved) {
+        // tap — if not swiped, navigate; if swiped close it
+        if (card.classList.contains('swiped')) {
+          card.classList.remove('swiped');
+          card.style.transform = '';
+        } else {
+          openGroup(card.dataset.gid);
+        }
+        return;
+      }
+      const shouldSnap = (curX === 0 && dx < -40) || (curX === -SNAP && dx > 40);
+      const open = (curX === 0 && dx < -40) || (curX === -SNAP && dx >= -40);
+      // close all others
+      document.querySelectorAll('.group-card.swiped').forEach(c => { if(c!==card){c.classList.remove('swiped');c.style.transform='';} });
+      if (open) {
+        card.classList.add('swiped');
+        card.style.transform = `translateX(-${SNAP}px)`;
+      } else {
+        card.classList.remove('swiped');
+        card.style.transform = '';
+      }
+    });
+  });
+
+  // tap elsewhere closes all
+  document.getElementById('groups-list').addEventListener('touchstart', e => {
+    if (!e.target.closest('.group-card') && !e.target.closest('.group-action-btn')) {
+      document.querySelectorAll('.group-card.swiped').forEach(c => { c.classList.remove('swiped'); c.style.transform=''; });
+    }
+  }, { passive: true });
 }
 
 async function loadGroupCardInfo(groupId) {
@@ -460,6 +576,7 @@ async function getMyBalance(groupId) {
   return bal;
 }
 
+// ── GROUP CREATE/EDIT/DELETE ──
 function openCreateGroup() {
   document.getElementById('new-group-name').value = '';
   document.getElementById('create-group-msg').innerHTML = '';
@@ -467,8 +584,7 @@ function openCreateGroup() {
     `<div class="member-split-item">
       <div class="mname">${m.name}</div>
       <input type="checkbox" id="cg-${m.id}" ${m.id === currentMember.id ? 'checked' : ''} />
-    </div>`
-  ).join('');
+    </div>`).join('');
   openModal('modal-create-group');
 }
 
@@ -484,12 +600,42 @@ async function createGroup() {
   await showHome();
 }
 
+function openEditGroup(id, name) {
+  editingGroupId = id;
+  document.getElementById('edit-group-name').value = name;
+  // close swipe
+  document.querySelectorAll('.group-card.swiped').forEach(c => { c.classList.remove('swiped'); c.style.transform=''; });
+  openModal('modal-edit-group');
+}
+
+async function saveGroupName() {
+  const name = document.getElementById('edit-group-name').value.trim();
+  if (!name || !editingGroupId) return;
+  await sb.from('groups').update({ name }).eq('id', editingGroupId);
+  editingGroupId = null;
+  closeModal('modal-edit-group');
+  await showHome();
+}
+
+async function deleteGroup(id) {
+  document.querySelectorAll('.group-card.swiped').forEach(c => { c.classList.remove('swiped'); c.style.transform=''; });
+  const { data: exps } = await sb.from('expenses').select('id').eq('group_id', id);
+  if (exps?.length) {
+    await sb.from('expense_splits').delete().in('expense_id', exps.map(e=>e.id));
+    await sb.from('expenses').delete().eq('group_id', id);
+  }
+  await sb.from('group_members').delete().eq('group_id', id);
+  await sb.from('groups').delete().eq('id', id);
+  await showHome();
+}
+
+// ── GROUP DETAIL ──
 async function openGroup(groupId) {
   currentGroup = groupId;
   const { data: group } = await sb.from('groups').select('*').eq('id', groupId).single();
   const { data: gms } = await sb.from('group_members').select('members(*)').eq('group_id', groupId);
   currentGroupMembers = gms?.map(m => m.members).filter(Boolean)||[];
-  const i = Math.abs(groupId.charCodeAt(0)) % COLORS.length;
+  const i = groupId.charCodeAt(0) % COLORS.length;
   document.getElementById('group-header-bg').style.background = `linear-gradient(135deg, ${COLORS[i]}, ${COLORS[(i+2)%COLORS.length]}cc)`;
   document.getElementById('group-detail-name').textContent = group.name;
   document.getElementById('group-member-chips').innerHTML = currentGroupMembers.map(m => `<div class="member-chip">${m.name}</div>`).join('');
@@ -521,6 +667,7 @@ async function loadBalanceCards() {
   }).join('');
 }
 
+// ── EXPENSES ──
 async function loadExpenses() {
   const { data: expenses } = await sb.from('expenses').select('*, expense_splits(*)').eq('group_id', currentGroup).order('created_at', { ascending: false });
   const el = document.getElementById('expenses-list');
@@ -529,77 +676,82 @@ async function loadExpenses() {
     const payer = currentGroupMembers.find(m => m.id === exp.paid_by)?.name || 'Someone';
     const myShare = exp.expense_splits.find(s => s.member_id === currentMember.id)?.amount || 0;
     const date = new Date(exp.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-    return `<div class="expense-wrapper" id="wrap-${exp.id}">
+    return `<div class="expense-wrapper" id="ewrap-${exp.id}">
       <div class="expense-actions">
         <button class="expense-action-btn edit" onclick="openEditExpense('${exp.id}')">✏️<span>Edit</span></button>
         <button class="expense-action-btn delete" onclick="deleteExpense('${exp.id}')">🗑️<span>Delete</span></button>
       </div>
-      <div class="expense-item" id="exp-${exp.id}">
+      <div class="expense-item" id="eitem-${exp.id}">
         <div class="expense-icon" style="background:${CAT_COLORS[exp.category]||'#f5f5f5'}">${CAT_ICONS[exp.category]||'📦'}</div>
         <div class="expense-info"><div class="desc">${exp.description}</div><div class="meta">${payer} paid · ${date}</div></div>
         <div class="expense-amount"><div class="total">${fmt(exp.amount, exp.currency)}</div><div class="share">your share: ${fmt(myShare, exp.currency)}</div></div>
       </div>
     </div>`;
   }).join('');
-  initSwipe();
+  initExpenseSwipe();
 }
 
-function initSwipe() {
+function initExpenseSwipe() {
   document.querySelectorAll('.expense-item').forEach(item => {
-    let startX = 0, startY = 0, isDragging = false;
-    item.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = false; }, { passive: true });
+    let startX=0, startY=0, curX=0, dragging=false, hasMoved=false;
+    const SNAP = 144;
+
+    item.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      curX = item.classList.contains('swiped') ? -SNAP : 0;
+      dragging = true; hasMoved = false;
+      item.classList.remove('snapping');
+    }, { passive: true });
+
     item.addEventListener('touchmove', e => {
+      if (!dragging) return;
       const dx = e.touches[0].clientX - startX;
       const dy = e.touches[0].clientY - startY;
-      if (!isDragging && Math.abs(dy) > Math.abs(dx)) return;
-      isDragging = true;
+      if (!hasMoved && Math.abs(dy) > Math.abs(dx)) { dragging = false; return; }
+      hasMoved = true;
+      const newX = Math.max(-SNAP, Math.min(0, curX + dx));
+      item.style.transform = `translateX(${newX}px)`;
     }, { passive: true });
+
     item.addEventListener('touchend', e => {
+      if (!dragging) return;
+      dragging = false;
+      item.classList.add('snapping');
       const dx = e.changedTouches[0].clientX - startX;
-      const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 40) return;
-      const alreadySwiped = item.classList.contains('swiped');
-      // close all others
-      document.querySelectorAll('.expense-item.swiped').forEach(i => i.classList.remove('swiped'));
-      if (dx < -40 && !alreadySwiped) item.classList.add('swiped');
+      if (!hasMoved) {
+        if (item.classList.contains('swiped')) { item.classList.remove('swiped'); item.style.transform=''; }
+        return;
+      }
+      const open = (curX === 0 && dx < -40) || (curX === -SNAP && dx >= -40);
+      document.querySelectorAll('.expense-item.swiped').forEach(i2 => { if(i2!==item){i2.classList.remove('swiped');i2.style.transform='';} });
+      if (open && dx < 0) { item.classList.add('swiped'); item.style.transform=`translateX(-${SNAP}px)`; }
+      else { item.classList.remove('swiped'); item.style.transform=''; }
     });
-  });
-  // tap anywhere else closes swipes
-  document.getElementById('expenses-list').addEventListener('click', e => {
-    if (!e.target.closest('.expense-action-btn')) {
-      document.querySelectorAll('.expense-item.swiped').forEach(i => i.classList.remove('swiped'));
-    }
   });
 }
 
 async function deleteExpense(id) {
-  if (!confirm('Delete this expense?')) return;
   await sb.from('expense_splits').delete().eq('expense_id', id);
   await sb.from('expenses').delete().eq('id', id);
   await loadGroupDetail();
 }
 
-let editingExpenseId = null;
 async function openEditExpense(id) {
-  document.querySelectorAll('.expense-item.swiped').forEach(i => i.classList.remove('swiped'));
+  document.querySelectorAll('.expense-item.swiped').forEach(i => { i.classList.remove('swiped'); i.style.transform=''; });
   const { data: exp } = await sb.from('expenses').select('*, expense_splits(*)').eq('id', id).single();
   if (!exp) return;
   editingExpenseId = id;
-
   document.getElementById('exp-desc').value = exp.description;
   document.getElementById('exp-amount').value = exp.amount;
   document.getElementById('exp-currency').value = exp.currency || 'EUR';
   document.getElementById('exp-paidby').innerHTML = currentGroupMembers.map(m =>
     `<option value="${m.id}" ${m.id===exp.paid_by?'selected':''}>${m.name}</option>`).join('');
-
   selectedCategory = exp.category || 'food_drinks';
   selectedSplitMethod = exp.split_method || 'exact';
-
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === selectedCategory));
-  document.querySelectorAll('.split-tab').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(selectedSplitMethod.replace('_',' ').split(' ')[0])));
-
+  document.querySelectorAll('.split-tab').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().replace(' ','_') === selectedSplitMethod || (b.textContent==='One paid' && selectedSplitMethod==='one_paid_all') || (b.textContent==='Percent' && selectedSplitMethod==='percentage')));
   renderSplitMembers();
-  // pre-fill split values
   exp.expense_splits.forEach(s => {
     const el = document.getElementById(`sv-${s.member_id}`);
     if (!el) return;
@@ -607,24 +759,12 @@ async function openEditExpense(id) {
     else el.value = selectedSplitMethod === 'percentage' ? (s.percentage || 0) : s.amount;
   });
   updateSplitSummary();
-
-  document.getElementById('modal-add-expense').querySelector('h2').textContent = 'Edit Expense';
+  document.getElementById('expense-modal-title').textContent = 'Edit Expense';
   document.getElementById('add-expense-msg').innerHTML = '';
   openModal('modal-add-expense');
 }
 
-async function deleteCurrentGroup() {
-  if (!confirm('Delete this group and all its expenses?')) return;
-  const { data: exps } = await sb.from('expenses').select('id').eq('group_id', currentGroup);
-  if (exps?.length) {
-    await sb.from('expense_splits').delete().in('expense_id', exps.map(e => e.id));
-    await sb.from('expenses').delete().eq('group_id', currentGroup);
-  }
-  await sb.from('group_members').delete().eq('group_id', currentGroup);
-  await sb.from('groups').delete().eq('id', currentGroup);
-  showHome();
-}
-
+// ── ADD/EDIT EXPENSE ──
 function openAddExpense() {
   editingExpenseId = null;
   document.getElementById('exp-desc').value = '';
@@ -636,7 +776,7 @@ function openAddExpense() {
   document.querySelectorAll('.split-tab').forEach(b => b.classList.toggle('active', b.textContent === 'Exact'));
   document.getElementById('exp-paidby').innerHTML = currentGroupMembers.map(m =>
     `<option value="${m.id}" ${m.id===currentMember.id?'selected':''}>${m.name}</option>`).join('');
-  document.getElementById('modal-add-expense').querySelector('h2').textContent = 'Add Expense';
+  document.getElementById('expense-modal-title').textContent = 'Add Expense';
   renderSplitMembers();
   openModal('modal-add-expense');
 }
@@ -654,7 +794,7 @@ function updateSplitSummary() {
     el.className = `split-summary ${ok?'ok':'bad'}`;
     el.innerHTML = ok
       ? `<span>✅ Splits match total</span><span>${fmt(entered)}</span>`
-      : `<span>${diff > 0 ? `€${fmt(diff)} remaining` : `Over by €${fmt(Math.abs(diff))}`}</span><span>${fmt(entered)} / ${fmt(amount)}</span>`;
+      : `<span>${diff > 0 ? `${fmt(diff)} remaining` : `Over by ${fmt(Math.abs(diff))}`}</span><span>${fmt(entered)} / ${fmt(amount)}</span>`;
   } else if (selectedSplitMethod === 'percentage') {
     const total = currentGroupMembers.reduce((a,m) => a + parseFloat(document.getElementById(`sv-${m.id}`)?.value||0), 0);
     const ok = Math.abs(total - 100) < 0.01;
@@ -673,7 +813,6 @@ function renderSplitMembers() {
       : `<input type="number" id="sv-${m.id}" placeholder="${selectedSplitMethod==='percentage'?'0':'0.00'}" step="${selectedSplitMethod==='percentage'?'1':'0.01'}" oninput="updateSplitSummary()" />`;
     return `<div class="member-split-item"><div class="mname">${m.name}</div>${input}</div>`;
   }).join('') + (isNumeric ? `<div id="split-summary" class="split-summary bad" style="display:none"><span>Enter amounts above</span></div>` : '');
-  // wire amount field too
   const amtField = document.getElementById('exp-amount');
   if (amtField) amtField.oninput = updateSplitSummary;
 }
@@ -708,23 +847,21 @@ async function submitExpense() {
   }
 
   if (editingExpenseId) {
-    // UPDATE existing
     const { error } = await sb.from('expenses').update({ paid_by: paidBy, description: desc, amount, currency, category: selectedCategory, split_method: selectedSplitMethod }).eq('id', editingExpenseId);
-    if (error) { showMsg('add-expense-msg', error.message, 'error'); return; }
+    if (error) { showMsg('add-expense-msg', error.message,'error'); return; }
     await sb.from('expense_splits').delete().eq('expense_id', editingExpenseId);
     await sb.from('expense_splits').insert(splits.map(s => ({ expense_id: editingExpenseId, ...s })));
     editingExpenseId = null;
   } else {
-    // INSERT new
     const { data: exp, error } = await sb.from('expenses').insert({ group_id: currentGroup, paid_by: paidBy, description: desc, amount, currency, category: selectedCategory, split_method: selectedSplitMethod }).select().single();
-    if (error) { showMsg('add-expense-msg', error.message, 'error'); return; }
+    if (error) { showMsg('add-expense-msg', error.message,'error'); return; }
     await sb.from('expense_splits').insert(splits.map(s => ({ expense_id: exp.id, ...s })));
   }
-
   closeModal('modal-add-expense');
   await loadGroupDetail();
 }
 
+// ── SETTLE ──
 async function openSettleModal() {
   const { data: expenses } = await sb.from('expenses').select('*, expense_splits(*)').eq('group_id', currentGroup);
   const net = {};
@@ -749,12 +886,12 @@ async function openSettleModal() {
 function simplifyDebts(net) {
   const creditors=[], debtors=[];
   Object.entries(net).forEach(([id,bal]) => { if(bal>0.01) creditors.push({id,bal}); else if(bal<-0.01) debtors.push({id,bal:-bal}); });
-  const result=[]; let ci=0, di=0;
+  const result=[]; let ci=0,di=0;
   while(ci<creditors.length && di<debtors.length) {
-    const c=creditors[ci], d=debtors[di], amt=Math.min(c.bal,d.bal);
+    const c=creditors[ci],d=debtors[di],amt=Math.min(c.bal,d.bal);
     result.push({from:d.id,to:c.id,amount:round(amt)});
     c.bal-=amt; d.bal-=amt;
-    if(c.bal<0.01) ci++; if(d.bal<0.01) di++;
+    if(c.bal<0.01)ci++; if(d.bal<0.01)di++;
   }
   return result;
 }
@@ -770,6 +907,78 @@ async function confirmSettle() {
   await loadGroupDetail();
 }
 
+// ── CHART ──
+async function openChartModal() {
+  const { data: expenses } = await sb.from('expenses').select('*, expense_splits(*)').eq('group_id', currentGroup).order('created_at', { ascending: true });
+  if (!expenses?.length) { alert('No expenses to chart yet!'); return; }
+
+  // Build cumulative spend per member per expense index
+  const memberTotals = {};
+  currentGroupMembers.forEach(m => memberTotals[m.id] = 0);
+  const labels = [];
+  const datasets = currentGroupMembers.map((m, i) => ({
+    label: m.name,
+    data: [],
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length] + '22',
+    borderWidth: 2.5,
+    pointRadius: 4,
+    pointBackgroundColor: COLORS[i % COLORS.length],
+    tension: 0.3,
+    fill: false
+  }));
+
+  expenses.forEach((exp, idx) => {
+    labels.push(`#${idx+1}`);
+    currentGroupMembers.forEach((m, mi) => {
+      const split = exp.expense_splits.find(s => s.member_id === m.id);
+      memberTotals[m.id] = round(memberTotals[m.id] + (split?.amount || 0));
+      datasets[mi].data.push(memberTotals[m.id]);
+    });
+  });
+
+  // Legend
+  document.getElementById('chart-legend').innerHTML = currentGroupMembers.map((m,i) =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${COLORS[i%COLORS.length]}"></div>${m.name}: ${fmt(memberTotals[m.id])}</div>`
+  ).join('');
+
+  // Destroy old chart
+  if (spendChart) { spendChart.destroy(); spendChart = null; }
+
+  const ctx = document.getElementById('spend-chart').getContext('2d');
+  spendChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Purchase #', font: { weight: 'bold', size: 12 } },
+          grid: { color: '#f0f0f0' }
+        },
+        y: {
+          title: { display: true, text: 'Cumulative (€)', font: { weight: 'bold', size: 12 } },
+          beginAtZero: true,
+          grid: { color: '#f0f0f0' },
+          ticks: { callback: v => '€' + v }
+        }
+      }
+    }
+  });
+
+  openModal('modal-chart');
+}
+
+// ── SETTINGS ──
 async function loadSettingsScreen() {
   document.getElementById('settings-whoami').textContent = currentMember?.name || '—';
   await loadAllMembers();
@@ -777,8 +986,7 @@ async function loadSettingsScreen() {
     `<div class="settings-item">
       <div><div class="slabel">${m.name}</div></div>
       <button class="s-del" onclick="deleteMember('${m.id}','${m.name}')">Remove</button>
-    </div>`
-  ).join('');
+    </div>`).join('');
 }
 
 async function addMember() {
@@ -787,8 +995,7 @@ async function addMember() {
   const { error } = await sb.from('members').insert({ name });
   if (error) { showMsg('member-msg', error.message, 'error'); return; }
   document.getElementById('new-member-input').value = '';
-  await loadAllMembers();
-  await loadSettingsScreen();
+  await loadAllMembers(); await loadSettingsScreen();
   showMsg('member-msg', `${name} added! ✅`, 'success');
 }
 
@@ -796,8 +1003,7 @@ async function deleteMember(id, name) {
   if (!confirm(`Remove ${name}?`)) return;
   await sb.from('members').delete().eq('id', id);
   if (currentMember?.id === id) { resetIdentity(); return; }
-  await loadAllMembers();
-  await loadSettingsScreen();
+  await loadAllMembers(); await loadSettingsScreen();
 }
 
 function resetIdentity() {
@@ -807,6 +1013,7 @@ function resetIdentity() {
   showScreen('pick');
 }
 
+// ── UTILS ──
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(`screen-${name}`).classList.add('active');
@@ -815,8 +1022,13 @@ function showScreen(name) {
 }
 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if (id === 'modal-chart' && spendChart) { spendChart.destroy(); spendChart = null; }
+}
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => {
+  if (e.target === o) { o.classList.remove('open'); if(o.id==='modal-chart'&&spendChart){spendChart.destroy();spendChart=null;} }
+}));
 function showMsg(id, text, type) { const el=document.getElementById(id); if(el) el.innerHTML=`<div class="msg ${type}">${text}</div>`; }
 function fmt(amount, currency='EUR') { const s={EUR:'€',USD:'$',GBP:'£',CHF:'CHF ',CZK:'CZK '}; return (s[currency]||'')+parseFloat(amount||0).toFixed(2); }
 function round(n) { return Math.round(n*100)/100; }
