@@ -66,9 +66,12 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .net-balance{margin-top:14px;background:rgba(255,255,255,.08);border-radius:18px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
 .net-balance .label{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:4px}
 .net-balance .amount{font-size:30px;font-weight:900}
-.amount.positive{color:var(--teal)}
-.amount.negative{color:var(--coral)}
+.amount.positive{color:#1CC29F}
+.amount.negative{color:#FF6B6B}
 .amount.neutral{color:white}
+/* balance card pos/neg - explicit so dark mode inherits correctly */
+.balance-card .bal.pos{color:#1CC29F}
+.balance-card .bal.neg{color:#FF6B6B}
 .home-toolbar{display:flex;align-items:center;justify-content:space-between}
 .section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--subtext);padding:14px 20px 8px}
 
@@ -131,6 +134,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .msg{margin-top:12px;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;text-align:center}
 .msg.success{background:#d4f5ee;color:#0a7c5c}
 .msg.error{background:#ffe0e0;color:#c0392b}
+body.dark .msg.success{background:#0a2a22;color:#1CC29F}
+body.dark .msg.error{background:#2a0f0f;color:#FF6B6B}
 
 /* ── GROUP DETAIL HEADER ── */
 .group-detail-header{padding:28px 20px 16px;color:white;position:sticky;top:0;z-index:100}
@@ -147,8 +152,6 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .balance-card:active{transform:scale(.95)}
 .balance-card .person{font-size:12px;font-weight:700;color:var(--subtext)}
 .balance-card .bal{font-size:20px;font-weight:900;margin-top:4px}
-.balance-card .bal.pos{color:var(--teal)}
-.balance-card .bal.neg{color:var(--coral)}
 .balance-card .bal-lbl{font-size:11px;color:var(--subtext);margin-top:2px}
 
 /* ── ACTION ROW ── */
@@ -182,7 +185,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
 .cat-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:2px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);cursor:pointer;font-size:10px;font-weight:700}
 .cat-btn .icon{font-size:17px}
-.cat-btn.active{border-color:var(--purple);background:var(--purple);color:white}
+.cat-btn.active{border-color:var(--purple);background:#f0eeff;color:var(--purple)}
+body.dark .cat-btn.active{background:#1e1a3a;color:#a89fff}
 .member-split-list{margin-bottom:14px}
 .member-split-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
 .member-split-item:last-child{border-bottom:none}
@@ -452,18 +456,18 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div class="input-group">
         <label>Category</label>
         <div class="category-grid" id="cat-grid">
-          <button class="cat-btn active" data-cat="food_drinks" onclick="selectCat(this)"><span class="icon">&#x25A0;</span>Food</button>
-          <button class="cat-btn" data-cat="transport" onclick="selectCat(this)"><span class="icon">&#x25B2;</span>Car</button>
-          <button class="cat-btn" data-cat="flights" onclick="selectCat(this)"><span class="icon">&#x2197;</span>Flights</button>
-          <button class="cat-btn" data-cat="accommodation" onclick="selectCat(this)"><span class="icon">&#x25A1;</span>Hotel</button>
-          <button class="cat-btn" data-cat="activities" onclick="selectCat(this)"><span class="icon">&#x25C6;</span>Fun</button>
-          <button class="cat-btn" data-cat="nightlife" onclick="selectCat(this)"><span class="icon">&#x25CF;</span>Drinks</button>
-          <button class="cat-btn" data-cat="shopping" onclick="selectCat(this)"><span class="icon">&#x2B1C;</span>Shop</button>
-          <button class="cat-btn" data-cat="groceries" onclick="selectCat(this)"><span class="icon">&#x25B3;</span>Grocery</button>
-          <button class="cat-btn" data-cat="fuel" onclick="selectCat(this)"><span class="icon">&#x25BC;</span>Fuel</button>
-          <button class="cat-btn" data-cat="health" onclick="selectCat(this)"><span class="icon">&#x2B22;</span>Health</button>
-          <button class="cat-btn" data-cat="tickets" onclick="selectCat(this)"><span class="icon">&#x2605;</span>Tickets</button>
-          <button class="cat-btn" data-cat="other" onclick="selectCat(this)"><span class="icon">&#x25CB;</span>Other</button>
+          <button class="cat-btn active" data-cat="food_drinks" onclick="selectCat(this)"><span class="icon">&#x1F354;</span>Food</button>
+          <button class="cat-btn" data-cat="transport" onclick="selectCat(this)"><span class="icon">&#x1F697;</span>Car</button>
+          <button class="cat-btn" data-cat="flights" onclick="selectCat(this)"><span class="icon">&#x2708;</span>Flights</button>
+          <button class="cat-btn" data-cat="accommodation" onclick="selectCat(this)"><span class="icon">&#x1F3E8;</span>Hotel</button>
+          <button class="cat-btn" data-cat="activities" onclick="selectCat(this)"><span class="icon">&#x1F3A8;</span>Fun</button>
+          <button class="cat-btn" data-cat="nightlife" onclick="selectCat(this)"><span class="icon">&#x1F37B;</span>Drinks</button>
+          <button class="cat-btn" data-cat="shopping" onclick="selectCat(this)"><span class="icon">&#x1F6CD;</span>Shop</button>
+          <button class="cat-btn" data-cat="groceries" onclick="selectCat(this)"><span class="icon">&#x1F96C;</span>Grocery</button>
+          <button class="cat-btn" data-cat="fuel" onclick="selectCat(this)"><span class="icon">&#x26FD;</span>Fuel</button>
+          <button class="cat-btn" data-cat="health" onclick="selectCat(this)"><span class="icon">&#x1F48A;</span>Health</button>
+          <button class="cat-btn" data-cat="tickets" onclick="selectCat(this)"><span class="icon">&#x1F3AB;</span>Tickets</button>
+          <button class="cat-btn" data-cat="other" onclick="selectCat(this)"><span class="icon">&#x1F4E6;</span>Other</button>
         </div>
       </div>
       <div class="input-group">
@@ -551,14 +555,9 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 const COLORS=['#6C63FF','#FF6B6B','#1CC29F','#FF9F43','#54A0FF','#FF6CAE','#A29BFE','#00CEC9'];
-// Monochrome SVG icons for categories (rendered as CSS background via inline)
-const CAT_ICON_SVG={
-  food_drinks:'&#x25A0;',transport:'&#x25B2;',flights:'&#x2197;',accommodation:'&#x25A1;',
-  activities:'&#x25C6;',nightlife:'&#x25CF;',shopping:'&#x2B1C;',groceries:'&#x25B3;',
-  fuel:'&#x25BC;',health:'&#x2B22;',tickets:'&#x2605;',other:'&#x25CB;'
-};
-const CAT_COLORS={food_drinks:'#e8e8e8',transport:'#e0e0f0',flights:'#e8eaf6',accommodation:'#f0e8f8',activities:'#e8f0e8',nightlife:'#f8e8ec',shopping:'#f8f4e8',groceries:'#eef4e8',fuel:'#e8e8e8',health:'#e8f4f8',tickets:'#f0eaf8',other:'#eeeeee'};
-const CAT_COLORS_DARK={food_drinks:'#333',transport:'#2a2a3a',flights:'#252535',accommodation:'#2a2535',activities:'#252a25',nightlife:'#352025',shopping:'#333020',groceries:'#282f22',fuel:'#333',health:'#202d35',tickets:'#252030',other:'#2a2a2a'};
+const CAT_ICON_SVG={food_drinks:'&#x1F354;',transport:'&#x1F697;',flights:'&#x2708;',accommodation:'&#x1F3E8;',activities:'&#x1F3A8;',nightlife:'&#x1F37B;',shopping:'&#x1F6CD;',groceries:'&#x1F96C;',fuel:'&#x26FD;',health:'&#x1F48A;',tickets:'&#x1F3AB;',other:'&#x1F4E6;'};
+const CAT_COLORS={food_drinks:'#fff3e0',transport:'#e3f2fd',flights:'#e8eaf6',accommodation:'#f3e5f5',activities:'#e8f5e9',nightlife:'#fce4ec',shopping:'#fff8e1',groceries:'#f1f8e9',fuel:'#fff3e0',health:'#e0f7fa',tickets:'#ede7f6',other:'#f5f5f5'};
+const CAT_COLORS_DARK={food_drinks:'#2a1f10',transport:'#0f1e2e',flights:'#14152a',accommodation:'#1e1428',activities:'#102010',nightlife:'#2a1018',shopping:'#2a2410',groceries:'#18251a',fuel:'#2a2010',health:'#0f2028',tickets:'#1a1228',other:'#1e1e1e'};
 const CAT_LABELS={food_drinks:'Food',transport:'Car',flights:'Flights',accommodation:'Hotel',activities:'Fun',nightlife:'Drinks',shopping:'Shop',groceries:'Grocery',fuel:'Fuel',health:'Health',tickets:'Tickets',other:'Other'};
 
 let currentMember=null,allMembers=[],currentGroup=null,currentGroupMembers=[];
@@ -692,7 +691,7 @@ async function loadGroupCardInfo(groupId){
   const bal=await getMyBalance(groupId);
   const bel=document.getElementById(`gb-${groupId}`);
   if(bel){
-    const color=bal>0.01?'var(--teal)':bal<-0.01?'var(--coral)':'var(--subtext)';
+    const color=bal>0.01?'#1CC29F':bal<-0.01?'#FF6B6B':'#636e72';
     const lbl=bal>0.01?'owed to you':bal<-0.01?'you owe':'settled';
     bel.innerHTML=`<div class="amt" style="color:${color}">${fmt(Math.abs(bal))}</div><div class="lbl">${lbl}</div>`;
   }
@@ -867,7 +866,7 @@ async function openMemberStats(memberId){
     <div class="stat-card"><div class="sc-val" style="color:var(--blue)">${expensesPaidCount}</div><div class="sc-lbl">Expenses paid</div></div>
     <div class="stat-card"><div class="sc-val" style="color:var(--orange)">${fmt(totalPaid)}</div><div class="sc-lbl">Total paid out</div></div>
     <div class="stat-card"><div class="sc-val" style="color:var(--subtext)">${fmt(totalOwed)}</div><div class="sc-lbl">Share owed</div></div>
-    <div class="stat-card"><div class="sc-val" style="color:${netBal>0.01?'var(--teal)':netBal<-0.01?'var(--coral)':'var(--subtext)'}">${netBal>0.01?'+':''}${fmt(netBal)}</div><div class="sc-lbl">Net balance</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:${netBal>0.01?'#1CC29F':netBal<-0.01?'#FF6B6B':'#636e72'}">${netBal>0.01?'+':''}${fmt(netBal)}</div><div class="sc-lbl">Net balance</div></div>
   `;
   // Expense list for this member
   const dark=document.body.classList.contains('dark');
@@ -879,7 +878,7 @@ async function openMemberStats(memberId){
         const isPayer=exp.paid_by===memberId;
         const bg=dark?CAT_COLORS_DARK[exp.category]||'#2a2a2a':CAT_COLORS[exp.category]||'#eee';
         return `<div class="member-exp-item">
-          <div style="width:40px;height:40px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${CAT_ICON_SVG[exp.category]||'&#x25CB;'}</div>
+          <div style="width:40px;height:40px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${CAT_ICON_SVG[exp.category]||'&#x1F4E6;'}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${exp.description}</div>
             <div style="font-size:12px;color:var(--subtext);margin-top:2px">${date}${isPayer?' · paid':''}</div>
@@ -917,7 +916,7 @@ async function loadExpenses(){
         </button>
       </div>
       <div class="expense-item" id="eitem-${exp.id}">
-        <div class="expense-icon" style="background:${bg}">${CAT_ICON_SVG[exp.category]||'&#x25CB;'}</div>
+        <div class="expense-icon" style="background:${bg}">${CAT_ICON_SVG[exp.category]||'&#x1F4E6;'}</div>
         <div class="expense-info"><div class="desc">${exp.description}</div><div class="meta">${payer} paid &middot; ${date}</div></div>
         <div class="expense-amount"><div class="total">${fmt(exp.amount,exp.currency)}</div><div class="share">your share: ${fmt(myShare,exp.currency)}</div></div>
       </div>
