@@ -16,23 +16,13 @@
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 
 ```
-/* ── THEME VARIABLES ── */
 :root{
   --teal:#1CC29F;--coral:#FF6B6B;--purple:#6C63FF;
   --orange:#FF9F43;--blue:#54A0FF;--dark:#1a1a2e;
-  --bg:#f0f4f8;--card:#ffffff;--text:#2d3436;--subtext:#636e72;
-  --border:#e0e0e0;--input-bg:#ffffff;--modal-bg:#ffffff;
-  --header-bg:#1a1a2e;--shadow:rgba(0,0,0,0.06);
-  --handle-color:#d0d0d0
-}
-body.dark{
-  --bg:#0f0f14;--card:#1e1e2a;--text:#e8e8f0;--subtext:#9090a8;
-  --border:#2e2e3e;--input-bg:#252535;--modal-bg:#1e1e2a;
-  --header-bg:#0a0a12;--shadow:rgba(0,0,0,0.3);
-  --handle-color:#444455
+  --bg:#f0f4f8;--text:#2d3436;--subtext:#636e72;--border:#e0e0e0
 }
 
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;transition:background .25s,color .25s}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden}
 .screen{display:none;min-height:100vh;flex-direction:column}
 .screen.active{display:flex}
 
@@ -46,32 +36,32 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .pick-title{font-size:36px;font-weight:900;color:white;margin-bottom:6px}
 .pick-title span{color:var(--teal)}
 .pick-sub{color:rgba(255,255,255,0.6);font-size:15px;margin-bottom:40px}
-.pick-card{background:var(--card);border-radius:24px;padding:28px 20px;width:100%}
+.pick-card{background:white;border-radius:24px;padding:28px 20px;width:100%}
 .pick-card h2{font-size:20px;font-weight:800;margin-bottom:6px;color:var(--text)}
 .pick-card p{color:var(--subtext);font-size:14px;margin-bottom:24px}
 .name-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.name-btn{padding:16px 12px;border-radius:16px;border:2px solid var(--border);background:var(--card);font-size:15px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .15s;color:var(--text)}
+.name-btn{padding:16px 12px;border-radius:16px;border:2px solid var(--border);background:white;font-size:15px;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .15s;color:var(--text)}
 .name-btn:active{transform:scale(.95)}
 .avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:white}
 
 /* ── TOPBAR ── */
-.topbar{background:var(--header-bg);color:white;padding:36px 20px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar{background:var(--dark);color:white;padding:36px 20px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .topbar h1{font-size:20px;font-weight:900}
 .icon-btn{background:rgba(255,255,255,.12);border:none;color:white;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* ── HOME ── */
-.home-header{background:var(--header-bg);padding:28px 20px 20px;color:white}
+.home-header{background:var(--dark);padding:28px 20px 20px;color:white}
 .home-header .greeting{font-size:13px;color:rgba(255,255,255,.55)}
 .home-header .username{font-size:26px;font-weight:900;margin-top:2px}
 .net-balance{margin-top:14px;background:rgba(255,255,255,.08);border-radius:18px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
 .net-balance .label{font-size:12px;color:rgba(255,255,255,.55);margin-bottom:4px}
 .net-balance .amount{font-size:30px;font-weight:900}
-.amount.positive{color:#1CC29F}
-.amount.negative{color:#FF6B6B}
+.amount.positive{color:var(--teal)}
+.amount.negative{color:var(--coral)}
 .amount.neutral{color:white}
-/* balance card pos/neg - explicit so dark mode inherits correctly */
-.balance-card .bal.pos{color:#1CC29F}
-.balance-card .bal.neg{color:#FF6B6B}
+/* balance card pos/neg */
+.balance-card .bal.pos{color:var(--teal)}
+.balance-card .bal.neg{color:var(--coral)}
 .home-toolbar{display:flex;align-items:center;justify-content:space-between}
 .section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--subtext);padding:14px 20px 8px}
 
@@ -82,7 +72,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .group-action-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:76px;font-size:11px;font-weight:800;border:none;cursor:pointer;color:white}
 .group-action-btn.edit{background:var(--blue)}
 .group-action-btn.del{background:var(--coral)}
-.group-card{background:var(--card);border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px var(--shadow);cursor:pointer;position:relative;transform:translateX(0);will-change:transform;touch-action:pan-y}
+.group-card{background:white;border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);cursor:pointer;position:relative;transform:translateX(0);will-change:transform;touch-action:pan-y}
 .group-card.snapping{transition:transform .22s ease}
 .group-card.swiped{transform:translateX(-152px);border-radius:20px 0 0 20px}
 .group-icon{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
@@ -105,12 +95,12 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 /* ── BOTTOM SHEET (modal) ── */
 .sheet-overlay{display:none;position:fixed;inset:0;z-index:300;align-items:flex-end}
 .sheet-overlay.open{display:flex;background:rgba(0,0,0,.5);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
-.sheet{background:var(--modal-bg);border-radius:28px 28px 0 0;padding:0 0 48px;width:100%;max-height:94vh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,0,.14,1)}
+.sheet{background:white;border-radius:28px 28px 0 0;padding:0 0 48px;width:100%;max-height:94vh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,0,.14,1)}
 .sheet-overlay.open .sheet{transform:translateY(0)}
 
 /* Sheet header: handle + title + X */
-.sheet-header{display:flex;flex-direction:column;align-items:center;padding:12px 20px 0;position:sticky;top:0;background:var(--modal-bg);z-index:10;border-radius:28px 28px 0 0}
-.sheet-handle{width:40px;height:4px;background:var(--handle-color);border-radius:2px;margin-bottom:14px;cursor:grab;flex-shrink:0;align-self:center}
+.sheet-header{display:flex;flex-direction:column;align-items:center;padding:12px 20px 0;position:sticky;top:0;background:white;z-index:10;border-radius:28px 28px 0 0}
+.sheet-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin-bottom:14px;cursor:grab;flex-shrink:0;align-self:center}
 .sheet-title-row{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:16px}
 .sheet-title{font-size:22px;font-weight:900;color:var(--text)}
 .sheet-close{background:var(--border);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--subtext);font-size:18px;font-weight:700;flex-shrink:0}
@@ -119,14 +109,14 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 /* Legacy aliases so existing code still works */
 .modal-overlay{display:none;position:fixed;inset:0;z-index:300;align-items:flex-end}
 .modal-overlay.open{display:flex;background:rgba(0,0,0,.5);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
-.modal{background:var(--modal-bg);border-radius:28px 28px 0 0;padding:20px 20px 48px;width:100%;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,0,.14,1)}
+.modal{background:white;border-radius:28px 28px 0 0;padding:20px 20px 48px;width:100%;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,0,.14,1)}
 .modal-overlay.open .modal{transform:translateY(0)}
-.modal-handle{width:40px;height:4px;background:var(--handle-color);border-radius:2px;margin:0 auto 18px;cursor:grab}
+.modal-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 18px;cursor:grab}
 .modal h2{font-size:22px;font-weight:900;margin-bottom:18px;color:var(--text)}
 
 .input-group{margin-bottom:14px}
 .input-group label{display:block;font-weight:800;font-size:12px;margin-bottom:6px;color:var(--subtext);text-transform:uppercase;letter-spacing:.5px}
-.input-group input,.input-group select{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;background:var(--input-bg);color:var(--text);outline:none;transition:border-color .2s}
+.input-group input,.input-group select{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;background:white;color:var(--text);outline:none;transition:border-color .2s}
 .input-group input:focus{border-color:var(--teal)}
 .btn-primary{width:100%;padding:16px;background:linear-gradient(135deg,var(--teal),var(--blue));color:white;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer}
 .btn-primary:active{opacity:.85}
@@ -134,8 +124,6 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .msg{margin-top:12px;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:700;text-align:center}
 .msg.success{background:#d4f5ee;color:#0a7c5c}
 .msg.error{background:#ffe0e0;color:#c0392b}
-body.dark .msg.success{background:#0a2a22;color:#1CC29F}
-body.dark .msg.error{background:#2a0f0f;color:#FF6B6B}
 
 /* ── GROUP DETAIL HEADER ── */
 .group-detail-header{padding:28px 20px 16px;color:white;position:sticky;top:0;z-index:100}
@@ -148,7 +136,7 @@ body.dark .msg.error{background:#2a0f0f;color:#FF6B6B}
 /* ── BALANCE CARDS ── */
 .balance-cards{display:flex;gap:10px;padding:12px 16px;overflow-x:auto;scrollbar-width:none}
 .balance-cards::-webkit-scrollbar{display:none}
-.balance-card{background:var(--card);border-radius:16px;padding:14px 16px;min-width:130px;box-shadow:0 2px 10px var(--shadow);flex-shrink:0;cursor:pointer;transition:transform .1s}
+.balance-card{background:white;border-radius:16px;padding:14px 16px;min-width:130px;box-shadow:0 2px 10px rgba(0,0,0,.06);flex-shrink:0;cursor:pointer;transition:transform .1s}
 .balance-card:active{transform:scale(.95)}
 .balance-card .person{font-size:12px;font-weight:700;color:var(--subtext)}
 .balance-card .bal{font-size:20px;font-weight:900;margin-top:4px}
@@ -167,7 +155,7 @@ body.dark .msg.error{background:#2a0f0f;color:#FF6B6B}
 .expense-action-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:72px;font-size:11px;font-weight:800;border:none;cursor:pointer;color:white}
 .expense-action-btn.edit{background:var(--blue)}
 .expense-action-btn.delete{background:var(--coral)}
-.expense-item{background:var(--card);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px var(--shadow);position:relative;transform:translateX(0);will-change:transform;touch-action:pan-y}
+.expense-item{background:white;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative;transform:translateX(0);will-change:transform;touch-action:pan-y}
 .expense-item.snapping{transition:transform .22s ease}
 .expense-item.swiped{transform:translateX(-144px);border-radius:16px 0 0 16px}
 .expense-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
@@ -180,19 +168,18 @@ body.dark .msg.error{background:#2a0f0f;color:#FF6B6B}
 
 /* ── SPLIT ── */
 .split-tabs{display:flex;gap:7px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.split-tab{padding:8px 14px;border-radius:20px;border:2px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.split-tab{padding:8px 14px;border-radius:20px;border:2px solid var(--border);background:white;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
 .split-tab.active{background:var(--purple);border-color:var(--purple);color:white}
 .category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
-.cat-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:2px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);cursor:pointer;font-size:10px;font-weight:700}
+.cat-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:2px solid var(--border);border-radius:12px;background:white;color:var(--text);cursor:pointer;font-size:10px;font-weight:700}
 .cat-btn .icon{font-size:17px}
 .cat-btn.active{border-color:var(--purple);background:#f0eeff;color:var(--purple)}
-body.dark .cat-btn.active{background:#1e1a3a;color:#a89fff}
 .member-split-list{margin-bottom:14px}
 .member-split-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
 .member-split-item:last-child{border-bottom:none}
 .member-split-item .mname{font-weight:700;font-size:15px;color:var(--text)}
 .member-split-item input[type="checkbox"]{width:22px;height:22px;accent-color:var(--teal)}
-.member-split-item input[type="number"]{width:80px;padding:7px 10px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;text-align:right;font-family:'Nunito',sans-serif;outline:none;background:var(--input-bg);color:var(--text)}
+.member-split-item input[type="number"]{width:80px;padding:7px 10px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-weight:700;text-align:right;font-family:'Nunito',sans-serif;outline:none;background:white;color:var(--text)}
 .split-summary{margin-top:10px;padding:12px 14px;border-radius:12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
 .split-summary.ok{background:#d4f5ee;color:#0a7c5c}
 .split-summary.bad{background:#ffe0e0;color:#c0392b}
@@ -210,7 +197,7 @@ body.dark .cat-btn.active{background:#1e1a3a;color:#a89fff}
 .chart-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text)}
 .legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.bar-tooltip{position:fixed;background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.22);z-index:500;min-width:180px;max-width:240px;display:none;border:1px solid var(--border)}
+.bar-tooltip{position:fixed;background:white;border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.22);z-index:500;min-width:180px;max-width:240px;display:none;border:1px solid var(--border)}
 .bar-tooltip.show{display:block}
 .bar-tooltip h4{font-size:14px;font-weight:900;margin-bottom:8px;color:var(--text)}
 .bar-tooltip-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;font-weight:700}
@@ -231,7 +218,7 @@ body.dark .cat-btn.active{background:#1e1a3a;color:#a89fff}
 
 /* ── SETTINGS ── */
 #screen-settings{background:var(--bg)}
-.settings-section{background:var(--card);border-radius:20px;margin:0 16px 16px;overflow:hidden;box-shadow:0 2px 10px var(--shadow)}
+.settings-section{background:white;border-radius:20px;margin:0 16px 16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
 .settings-item{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
 .settings-item:last-child{border-bottom:none}
 .settings-item .slabel{font-size:15px;font-weight:700;color:var(--text)}
@@ -239,18 +226,10 @@ body.dark .cat-btn.active{background:#1e1a3a;color:#a89fff}
 .s-action{background:var(--teal);color:white;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
 .s-del{background:#ffe0e0;color:var(--coral);border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif}
 .add-member-row{display:flex;gap:8px;padding:0 16px 16px}
-.add-member-row input{flex:1;padding:13px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;background:var(--input-bg);color:var(--text)}
+.add-member-row input{flex:1;padding:13px 16px;border:2px solid var(--border);border-radius:14px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;background:white;color:var(--text)}
 .add-member-row input:focus{border-color:var(--teal)}
 .add-member-row button{background:var(--teal);color:white;border:none;padding:13px 20px;border-radius:14px;font-size:22px;font-weight:900;cursor:pointer}
 
-/* dark-mode toggle */
-.toggle-wrap{display:flex;align-items:center;gap:10px}
-.toggle{position:relative;width:48px;height:26px}
-.toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:26px;transition:.3s;cursor:pointer}
-.toggle-slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:white;border-radius:50%;transition:.3s}
-.toggle input:checked + .toggle-slider{background:var(--teal)}
-.toggle input:checked + .toggle-slider:before{transform:translateX(22px)}
 
 /* EDIT GROUP MEMBERS */
 .edit-member-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
@@ -258,7 +237,7 @@ body.dark .cat-btn.active{background:#1e1a3a;color:#a89fff}
 .edit-member-row .mname{font-weight:700;font-size:15px;color:var(--text)}
 .remove-member-btn{background:#ffe0e0;color:var(--coral);border:none;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer}
 .add-to-group-row{display:flex;gap:8px;margin-top:12px}
-.add-to-group-row select{flex:1;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;background:var(--input-bg);color:var(--text);outline:none}
+.add-to-group-row select{flex:1;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-family:'Nunito',sans-serif;font-weight:600;background:white;color:var(--text);outline:none}
 .add-to-group-row button{background:var(--teal);color:white;border:none;padding:11px 16px;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer}
 ```
 
@@ -352,15 +331,6 @@ body.dark .cat-btn.active{background:#1e1a3a;color:#a89fff}
     <div class="settings-item">
       <div><div class="slabel" id="settings-whoami">&#x2014;</div><div class="ssub">Tap Change to switch</div></div>
       <button class="s-action" onclick="resetIdentity()">Change</button>
-    </div>
-  </div>
-  <div class="section-title">Appearance</div>
-  <div class="settings-section">
-    <div class="settings-item">
-      <div><div class="slabel">Dark Mode</div><div class="ssub">Saved to your device</div></div>
-      <div class="toggle-wrap">
-        <label class="toggle"><input type="checkbox" id="dark-toggle" onchange="toggleDark(this.checked)"/><span class="toggle-slider"></span></label>
-      </div>
     </div>
   </div>
   <div class="section-title">Members</div>
@@ -557,7 +527,6 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const COLORS=['#6C63FF','#FF6B6B','#1CC29F','#FF9F43','#54A0FF','#FF6CAE','#A29BFE','#00CEC9'];
 const CAT_ICON_SVG={food_drinks:'&#x1F354;',transport:'&#x1F697;',flights:'&#x2708;',accommodation:'&#x1F3E8;',activities:'&#x1F3A8;',nightlife:'&#x1F37B;',shopping:'&#x1F6CD;',groceries:'&#x1F96C;',fuel:'&#x26FD;',health:'&#x1F48A;',tickets:'&#x1F3AB;',other:'&#x1F4E6;'};
 const CAT_COLORS={food_drinks:'#fff3e0',transport:'#e3f2fd',flights:'#e8eaf6',accommodation:'#f3e5f5',activities:'#e8f5e9',nightlife:'#fce4ec',shopping:'#fff8e1',groceries:'#f1f8e9',fuel:'#fff3e0',health:'#e0f7fa',tickets:'#ede7f6',other:'#f5f5f5'};
-const CAT_COLORS_DARK={food_drinks:'#2a1f10',transport:'#0f1e2e',flights:'#14152a',accommodation:'#1e1428',activities:'#102010',nightlife:'#2a1018',shopping:'#2a2410',groceries:'#18251a',fuel:'#2a2010',health:'#0f2028',tickets:'#1a1228',other:'#1e1e1e'};
 const CAT_LABELS={food_drinks:'Food',transport:'Car',flights:'Flights',accommodation:'Hotel',activities:'Fun',nightlife:'Drinks',shopping:'Shop',groceries:'Grocery',fuel:'Fuel',health:'Health',tickets:'Tickets',other:'Other'};
 
 let currentMember=null,allMembers=[],currentGroup=null,currentGroupMembers=[];
@@ -565,21 +534,9 @@ let selectedCategory='food_drinks',selectedSplitMethod='exact';
 let editingExpenseId=null,editingGroupId=null,editingGroupCurrentMembers=[];
 let spendChart=null,barChart=null;
 
-// ── DARK MODE ──
-function applyDark(dark){
-  document.body.classList.toggle('dark',dark);
-  const tog=document.getElementById('dark-toggle');
-  if(tog)tog.checked=dark;
-}
-function toggleDark(on){
-  localStorage.setItem('splitmate_dark',on?'1':'0');
-  applyDark(on);
-}
 
 // ── INIT ──
 async function init(){
-  // Apply saved dark mode before anything renders
-  applyDark(localStorage.getItem('splitmate_dark')==='1');
   await loadAllMembers();
   const savedId=localStorage.getItem('splitmate_member_id');
   if(savedId&&allMembers.find(m=>m.id===savedId)){
@@ -691,7 +648,7 @@ async function loadGroupCardInfo(groupId){
   const bal=await getMyBalance(groupId);
   const bel=document.getElementById(`gb-${groupId}`);
   if(bel){
-    const color=bal>0.01?'#1CC29F':bal<-0.01?'#FF6B6B':'#636e72';
+    const color=bal>0.01?'var(--teal)':bal<-0.01?'var(--coral)':'var(--subtext)';
     const lbl=bal>0.01?'owed to you':bal<-0.01?'you owe':'settled';
     bel.innerHTML=`<div class="amt" style="color:${color}">${fmt(Math.abs(bal))}</div><div class="lbl">${lbl}</div>`;
   }
@@ -866,17 +823,16 @@ async function openMemberStats(memberId){
     <div class="stat-card"><div class="sc-val" style="color:var(--blue)">${expensesPaidCount}</div><div class="sc-lbl">Expenses paid</div></div>
     <div class="stat-card"><div class="sc-val" style="color:var(--orange)">${fmt(totalPaid)}</div><div class="sc-lbl">Total paid out</div></div>
     <div class="stat-card"><div class="sc-val" style="color:var(--subtext)">${fmt(totalOwed)}</div><div class="sc-lbl">Share owed</div></div>
-    <div class="stat-card"><div class="sc-val" style="color:${netBal>0.01?'#1CC29F':netBal<-0.01?'#FF6B6B':'#636e72'}">${netBal>0.01?'+':''}${fmt(netBal)}</div><div class="sc-lbl">Net balance</div></div>
+    <div class="stat-card"><div class="sc-val" style="color:${netBal>0.01?'var(--teal)':netBal<-0.01?'var(--coral)':'var(--subtext)'}">${netBal>0.01?'+':''}${fmt(netBal)}</div><div class="sc-lbl">Net balance</div></div>
   `;
   // Expense list for this member
-  const dark=document.body.classList.contains('dark');
   document.getElementById('member-stats-expenses').innerHTML=memberExps.length
     ? memberExps.map(exp=>{
         const date=new Date(exp.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
         const split=exp.expense_splits.find(s=>s.member_id===memberId);
         const share=split?.amount||0;
         const isPayer=exp.paid_by===memberId;
-        const bg=dark?CAT_COLORS_DARK[exp.category]||'#2a2a2a':CAT_COLORS[exp.category]||'#eee';
+        const bg=CAT_COLORS[exp.category]||'#f5f5f5';
         return `<div class="member-exp-item">
           <div style="width:40px;height:40px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${CAT_ICON_SVG[exp.category]||'&#x1F4E6;'}</div>
           <div style="flex:1;min-width:0">
@@ -897,13 +853,12 @@ async function openMemberStats(memberId){
 async function loadExpenses(){
   const{data:expenses}=await sb.from('expenses').select('*,expense_splits(*)').eq('group_id',currentGroup).order('created_at',{ascending:false});
   const el=document.getElementById('expenses-list');
-  const dark=document.body.classList.contains('dark');
   if(!expenses?.length){el.innerHTML=`<div class="empty-state"><div class="ei"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div><p>No expenses yet</p><small>Tap + to add the first one</small></div>`;return;}
   el.innerHTML=expenses.map(exp=>{
     const payer=currentGroupMembers.find(m=>m.id===exp.paid_by)?.name||'Someone';
     const myShare=exp.expense_splits.find(s=>s.member_id===currentMember.id)?.amount||0;
     const date=new Date(exp.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    const bg=dark?CAT_COLORS_DARK[exp.category]||'#2a2a2a':CAT_COLORS[exp.category]||'#eee';
+    const bg=CAT_COLORS[exp.category]||'#f5f5f5';
     return `<div class="expense-wrapper" id="ewrap-${exp.id}">
       <div class="expense-actions">
         <button class="expense-action-btn edit" onclick="openEditExpense('${exp.id}')">
@@ -1109,9 +1064,8 @@ async function confirmSettle(){
 async function openChartSheet(){
   const{data:expenses}=await sb.from('expenses').select('*,expense_splits(*)').eq('group_id',currentGroup).order('created_at',{ascending:true});
   if(!expenses?.length){alert('No expenses to chart yet!');return;}
-  const dark=document.body.classList.contains('dark');
-  const gridColor=dark?'#2e2e3e':'#f0f0f0';
-  const tickColor=dark?'#9090a8':'#636e72';
+  const gridColor='#f0f0f0';
+  const tickColor='#636e72';
 
   const memberTotals={};currentGroupMembers.forEach(m=>memberTotals[m.id]=0);
   const lineLabels=[];
@@ -1225,8 +1179,6 @@ document.querySelectorAll('.sheet-overlay').forEach(o=>o.addEventListener('click
 // ── SETTINGS ──
 async function loadSettingsScreen(){
   document.getElementById('settings-whoami').textContent=currentMember?.name||'—';
-  const isDark=document.body.classList.contains('dark');
-  document.getElementById('dark-toggle').checked=isDark;
   await loadAllMembers();
   document.getElementById('members-settings-list').innerHTML=allMembers.map(m=>
     `<div class="settings-item"><div><div class="slabel">${m.name}</div></div><button class="s-del" onclick="deleteMember('${m.id}','${m.name}')">Remove</button></div>`).join('');
