@@ -84,7 +84,8 @@
 .sheet{background:white;border-radius:28px 28px 0 0;width:100%;height:80vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,0,.14,1);will-change:transform;overflow:hidden}
 .sheet-overlay.open .sheet{transform:translateY(0)}
 .sheet-header{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:12px 20px 0;background:white;border-radius:28px 28px 0 0;z-index:10}
-.sheet-handle{width:44px;height:5px;background:#d0d0d0;border-radius:3px;margin-bottom:14px;align-self:center;touch-action:none;cursor:grab;flex-shrink:0}
+.sheet-handle{width:44px;height:5px;background:#d0d0d0;border-radius:3px;margin-bottom:6px;align-self:center;touch-action:none;cursor:grab;flex-shrink:0;pointer-events:none}
+.sheet-handle-zone{width:100%;padding:16px 0 14px;display:flex;justify-content:center;align-items:center;touch-action:none;cursor:grab;flex-shrink:0;margin:-12px 0 0}
 .sheet-title-row{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:16px}
 .sheet-title{font-size:22px;font-weight:900;color:#2d3436}
 .sheet-close{background:#f0f0f0;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#636e72;font-size:16px;font-weight:900;flex-shrink:0;line-height:1}
@@ -287,7 +288,7 @@
 <div class="sheet-overlay" id="sheet-settings">
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-handle"></div>
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
         <span class="sheet-title">Settings</span>
         <button class="sheet-close" onclick="closeSheet('sheet-settings')">&#x2715;</button>
@@ -317,7 +318,7 @@
 <div class="sheet-overlay" id="sheet-create-group">
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-handle" id="shandle-create-group"></div>
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
         <span class="sheet-title">Create Group</span>
         <button class="sheet-close" onclick="closeSheet('sheet-create-group')">&#x2715;</button>
@@ -338,7 +339,7 @@
 <div class="sheet-overlay" id="sheet-edit-group">
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-handle" id="shandle-edit-group"></div>
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
         <span class="sheet-title">Edit Group</span>
         <button class="sheet-close" onclick="closeSheet('sheet-edit-group')">&#x2715;</button>
@@ -366,7 +367,7 @@
 <div class="sheet-overlay" id="sheet-add-expense">
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-handle" id="shandle-add-expense"></div>
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
         <span class="sheet-title" id="expense-sheet-title">Add Expense</span>
         <button class="sheet-close" onclick="closeSheet('sheet-add-expense')">&#x2715;</button>
@@ -427,7 +428,7 @@
 <div class="sheet-overlay" id="sheet-settle">
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-handle" id="shandle-settle"></div>
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
         <span class="sheet-title">Settle Up</span>
         <button class="sheet-close" onclick="closeSheet('sheet-settle')">&#x2715;</button>
@@ -447,7 +448,7 @@
 <div class="sheet-overlay" id="sheet-chart">
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-handle" id="shandle-chart"></div>
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
         <span class="sheet-title">Spend Charts</span>
         <button class="sheet-close" onclick="closeSheet('sheet-chart')">&#x2715;</button>
@@ -469,7 +470,7 @@
 <div class="sheet-overlay" id="sheet-member-stats">
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-handle" id="shandle-member-stats"></div>
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
         <span class="sheet-title" id="member-stats-name">Member</span>
         <button class="sheet-close" onclick="closeSheet('sheet-member-stats')">&#x2715;</button>
@@ -1086,7 +1087,7 @@ function closeSheet(id){
 function initSheetDrag(overlayId){
   const overlay=document.getElementById(overlayId);
   const sheet=overlay.querySelector('.sheet');
-  const handle=overlay.querySelector('.sheet-handle');
+  const handle=overlay.querySelector('.sheet-handle-zone');
   if(!handle||handle.dataset.dragging==='1')return;
   handle.dataset.dragging='1';
 
