@@ -221,6 +221,12 @@
 .stat-card .sc-val{font-size:22px;font-weight:900}
 .stat-card .sc-lbl{font-size:11px;color:#636e72;font-weight:700;margin-top:3px}
 
+/* ADMIN */
+.admin-badge{display:inline-block;background:linear-gradient(135deg,#FFD700,#FFA500);color:#7a4f00;font-size:10px;font-weight:900;padding:2px 7px;border-radius:20px;letter-spacing:.5px;margin-left:6px;vertical-align:middle}
+.admin-section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#FFA500;padding:12px 0 8px;display:flex;align-items:center;gap:6px}
+.force-unclaim-btn{background:#fff3cd;color:#8a6000;border:none;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer}
+.claim-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0}
+
 /* SETTINGS */
 .settings-section{background:white;border-radius:20px;margin:0 16px 16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.05)}
 .settings-item{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #e0e0e0}
@@ -341,11 +347,16 @@
       </div>
       <div class="section-title" style="padding:12px 0 8px;color:#636e72">Members</div>
       <div class="settings-section" id="members-settings-list"></div>
-      <div class="add-member-row" style="padding:12px 0 0">
+      <div id="add-member-section" class="add-member-row" style="padding:12px 0 0;display:none">
         <input type="text" id="new-member-input" placeholder="New member name"/>
         <button onclick="addMember()">+</button>
       </div>
       <div><div id="member-msg"></div></div>
+      <!-- ADMIN PANEL -->
+      <div id="admin-panel" style="display:none">
+        <div class="admin-section-title">&#x1F451; Admin Panel</div>
+        <div class="settings-section" id="admin-claims-list"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -532,7 +543,8 @@ const CAT_ICONS={food_drinks:'&#x1F354;',transport:'&#x1F697;',flights:'&#x2708;
 const CAT_COLORS={food_drinks:'#fff3e0',transport:'#e3f2fd',flights:'#e8eaf6',accommodation:'#f3e5f5',activities:'#e8f5e9',nightlife:'#fce4ec',shopping:'#fff8e1',groceries:'#f1f8e9',fuel:'#fff3e0',health:'#e0f7fa',tickets:'#ede7f6',other:'#f5f5f5'};
 const CAT_LABELS={food_drinks:'Food',transport:'Car',flights:'Flights',accommodation:'Hotel',activities:'Fun',nightlife:'Drinks',shopping:'Shop',groceries:'Grocery',fuel:'Fuel',health:'Health',tickets:'Tickets',other:'Other'};
 
-let currentMember=null,allMembers=[],currentGroup=null,currentGroupMembers=[];
+const ADMIN_NAME='Simeon';
+const isAdmin=()=>currentMember?.name===ADMIN_NAME;
 let selectedCategory='food_drinks',selectedSplitMethod='exact';
 let editingExpenseId=null,editingGroupId=null,editingGroupCurrentMembers=[];
 let spendChart=null,barChart=null;
@@ -605,8 +617,9 @@ async function pickName(id){
 }
 
 async function showHome(){
-  document.getElementById('home-username').textContent=currentMember?.name||'—';
-  // Show neutral state immediately — slot animation will replace it
+  const nameEl=document.getElementById('home-username');
+  nameEl.innerHTML=currentMember?.name||'—';
+  if(isAdmin())nameEl.innerHTML+=` <span class="admin-badge">&#x1F451; Admin</span>`;
   const balEl=document.getElementById('home-balance');
   balEl.textContent='···';
   balEl.className='amount neutral';
@@ -745,8 +758,12 @@ async function openEditGroup(id){
 
 function renderEditGroupMembers(){
   const currentIds=editingGroupCurrentMembers.map(m=>m.id);
-  document.getElementById('edit-group-members-list').innerHTML=editingGroupCurrentMembers.map(m=>
-    `<div class="edit-member-row"><div class="mname">${m.name}</div><button class="remove-member-btn" onclick="removeFromEditGroup('${m.id}','${m.name}')">Remove</button></div>`).join('');
+  document.getElementById('edit-group-members-list').innerHTML=editingGroupCurrentMembers.map(m=>{
+    const removeBtn=isAdmin()
+      ?`<button class="remove-member-btn" onclick="removeFromEditGroup('${m.id}','${m.name}')">Remove</button>`
+      :'';
+    return `<div class="edit-member-row"><div class="mname">${m.name}</div>${removeBtn}</div>`;
+  }).join('');
   const nonMembers=allMembers.filter(m=>!currentIds.includes(m.id));
   const sel=document.getElementById('edit-group-add-select');
   if(nonMembers.length){sel.innerHTML=nonMembers.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');sel.parentElement.style.display='flex';}
@@ -886,12 +903,16 @@ async function loadExpenses(){
     const myShare=exp.expense_splits.find(s=>s.member_id===currentMember.id)?.amount||0;
     const date=new Date(exp.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     const bg=CAT_COLORS[exp.category]||'#f5f5f5';
+    const canEdit=isAdmin()||exp.paid_by===currentMember.id;
+    const actions=canEdit
+      ?`<div class="expense-actions">
+          <button class="expense-action-btn edit" onclick="openEditExpense('${exp.id}')">&#x270F;<span>Edit</span></button>
+          <button class="expense-action-btn delete" onclick="deleteExpense('${exp.id}')">&#x1F5D1;<span>Delete</span></button>
+        </div>`
+      :'';
     return `<div class="expense-wrapper" id="ewrap-${exp.id}">
-      <div class="expense-actions">
-        <button class="expense-action-btn edit" onclick="openEditExpense('${exp.id}')">&#x270F;<span>Edit</span></button>
-        <button class="expense-action-btn delete" onclick="deleteExpense('${exp.id}')">&#x1F5D1;<span>Delete</span></button>
-      </div>
-      <div class="expense-item" id="eitem-${exp.id}">
+      ${actions}
+      <div class="expense-item${canEdit?'':' no-swipe'}" id="eitem-${exp.id}" data-swipeable="${canEdit}">
         <div class="expense-icon" style="background:${bg}">${CAT_ICONS[exp.category]||'&#x1F4E6;'}</div>
         <div class="expense-info"><div class="desc">${exp.description}</div><div class="meta">${payer} paid &middot; ${date}</div></div>
         <div class="expense-amount"><div class="total">${fmt(exp.amount,exp.currency)}</div><div class="share">your share: ${fmt(myShare,exp.currency)}</div></div>
@@ -902,7 +923,7 @@ async function loadExpenses(){
 }
 
 function initExpenseSwipe(){
-  document.querySelectorAll('.expense-item').forEach(item=>{
+  document.querySelectorAll('.expense-item[data-swipeable="true"]').forEach(item=>{
     let startX=0,startY=0,curX=0,dragging=false,hasMoved=false;
     const SNAP=144;
     item.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;curX=item.classList.contains('swiped')?-SNAP:0;dragging=true;hasMoved=false;item.classList.remove('snapping');},{passive:true});
@@ -1250,18 +1271,54 @@ function openSettingsSheet(){
 async function loadSettingsScreen(){
   document.getElementById('settings-whoami').textContent=currentMember?.name||'—';
   await loadAllMembers();
-  document.getElementById('members-settings-list').innerHTML=allMembers.map(m=>
-    `<div class="settings-item"><div><div class="slabel">${m.name}</div></div><button class="s-del" onclick="deleteMember('${m.id}','${m.name}')">Remove</button></div>`).join('');
+
+  // Members list — admins see Remove button, regular users see nothing
+  document.getElementById('members-settings-list').innerHTML=allMembers.map(m=>{
+    const removeBtn=isAdmin()&&m.id!==currentMember?.id
+      ?`<button class="s-del" onclick="deleteMember('${m.id}','${m.name}')">Remove</button>`
+      :'';
+    return `<div class="settings-item"><div><div class="slabel">${m.name}</div></div>${removeBtn}</div>`;
+  }).join('');
+
+  // Add member row — admin only
+  document.getElementById('add-member-section').style.display=isAdmin()?'flex':'none';
+
+  // Admin panel — claimed names overview + force unclaim
+  const adminPanel=document.getElementById('admin-panel');
+  if(isAdmin()){
+    adminPanel.style.display='block';
+    document.getElementById('admin-claims-list').innerHTML=allMembers.map(m=>{
+      const claimed=!!m.claimed_by;
+      const dot=`<span class="claim-dot" style="background:${claimed?'#1CC29F':'#e0e0e0'}"></span>`;
+      const btn=claimed
+        ?`<button class="force-unclaim-btn" onclick="forceUnclaim('${m.id}','${m.name}')">Unclaim</button>`
+        :`<span style="font-size:12px;color:#b0b0b0;font-weight:700">free</span>`;
+      return `<div class="settings-item">${dot}<div class="slabel">${m.name}</div>${btn}</div>`;
+    }).join('');
+  }else{
+    adminPanel.style.display='none';
+  }
+}
+
+async function forceUnclaim(id,name){
+  if(!isAdmin())return;
+  await sb.from('members').update({claimed_by:null}).eq('id',id);
+  await loadSettingsScreen();
+  showMsg('member-msg',`${name} unclaimed.`,'success');
 }
 
 async function addMember(){
+  if(!isAdmin()){showMsg('member-msg','Admin only','error');return;}
   const name=document.getElementById('new-member-input').value.trim();if(!name)return;
   const{error}=await sb.from('members').insert({name});
   if(error){showMsg('member-msg',error.message,'error');return;}
-  document.getElementById('new-member-input').value='';await loadAllMembers();await loadSettingsScreen();showMsg('member-msg',`${name} added!`,'success');
+  document.getElementById('new-member-input').value='';
+  await loadAllMembers();await loadSettingsScreen();
+  showMsg('member-msg',`${name} added!`,'success');
 }
 
 async function deleteMember(id,name){
+  if(!isAdmin()){showMsg('member-msg','Admin only','error');return;}
   if(!confirm(`Remove ${name}?`))return;
   await sb.from('members').delete().eq('id',id);
   if(currentMember?.id===id){resetIdentity();return;}
