@@ -23,20 +23,15 @@
 
 ```
 /* ── SLOT MACHINE NUMBER ── */
-.slot-wrap{
-  display:inline-flex;overflow:hidden;
-  height:1.15em;vertical-align:middle;position:relative;
-}
-.slot-reel{
-  display:flex;flex-direction:column;
-  animation:slotSpin .45s cubic-bezier(.22,1,.36,1) forwards;
-  will-change:transform;
-}
 @keyframes slotSpin{
-  0%{transform:translateY(-80%)}
-  100%{transform:translateY(0%)}
+  0%  { transform:translateY(-60%); opacity:0 }
+  60% { opacity:1 }
+  100%{ transform:translateY(0);    opacity:1 }
 }
-.slot-final{display:block;line-height:1.15em}
+.slot-num{
+  display:inline-block;
+  animation:slotSpin .38s cubic-bezier(.22,1,.36,1) both;
+}
 #screen-pick{background:linear-gradient(145deg,#1a1a2e,#16213e,#0f3460);align-items:center;justify-content:center;padding:40px 24px;text-align:center}
 .pick-logo{font-size:64px;margin-bottom:12px}
 .pick-title{font-size:36px;font-weight:900;color:white;margin-bottom:6px}
@@ -533,19 +528,11 @@ let spendChart=null,barChart=null;
 // Replaces a DOM element's text with a rolling animation then lands on the final value.
 function slotNumber(el,finalText,cls=''){
   if(!el)return;
-  // Build a reel: a few random-looking numbers above, then the real value
-  const chars='0123456789';
-  const dummy=Array.from({length:4},()=>{
-    // mimic the format of the final text but with random digits
-    return finalText.replace(/[0-9]/g,()=>chars[Math.floor(Math.random()*10)]);
-  });
-  const reelHTML=[...dummy,finalText].map((t,i)=>
-    `<span class="slot-final" style="opacity:${i<dummy.length?0.3:1}">${t}</span>`
-  ).join('');
-  el.innerHTML=`<span class="slot-wrap"><span class="slot-reel">${reelHTML}</span></span>`;
   if(cls)el.className=cls;
-  // After animation ends, replace with plain text so it's selectable/clean
-  setTimeout(()=>{el.innerHTML=finalText;if(cls)el.className=cls;},500);
+  // Wrap the final text in a single animated span — slides in from above
+  el.innerHTML=`<span class="slot-num">${finalText}</span>`;
+  // After animation ends, unwrap to plain text
+  setTimeout(()=>{el.innerHTML=finalText;if(cls)el.className=cls;},420);
 }
 
 // ── INIT ──
