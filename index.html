@@ -20,7 +20,54 @@
     .screen.active{display:flex}
 
 ```
-/* NAME PICKER */
+/* ── SPLASH SCREEN ── */
+#splash{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(145deg,#1a1a2e,#16213e,#0f3460);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:20px;
+  transition:opacity .4s ease, visibility .4s ease;
+}
+#splash.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.book{width:110px;height:80px;position:relative;transform-style:preserve-3d}
+.book-cover{
+  position:absolute;inset:0;border-radius:4px 14px 14px 4px;
+  background:linear-gradient(135deg,#1CC29F,#54A0FF);
+  box-shadow:0 8px 32px rgba(28,194,159,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;
+}
+/* Left page — flips open */
+.book-page{
+  position:absolute;top:2px;left:2px;width:50%;height:calc(100% - 4px);
+  background:white;border-radius:3px 0 0 3px;
+  transform-origin:right center;
+  animation:pageFlip .7s cubic-bezier(.4,0,.2,1) .2s both;
+}
+@keyframes pageFlip{
+  0%{transform:rotateY(0deg);opacity:1}
+  60%{transform:rotateY(-155deg);opacity:.7}
+  100%{transform:rotateY(-180deg);opacity:0}
+}
+.splash-logo{font-size:38px;font-weight:900;color:white;letter-spacing:-1px}
+.splash-logo span{color:#1CC29F}
+.splash-sub{font-size:13px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.5px}
+
+/* ── SLOT MACHINE NUMBER ── */
+.slot-wrap{
+  display:inline-flex;overflow:hidden;
+  height:1.15em;vertical-align:middle;position:relative;
+}
+.slot-reel{
+  display:flex;flex-direction:column;
+  animation:slotSpin .45s cubic-bezier(.22,1,.36,1) forwards;
+  will-change:transform;
+}
+@keyframes slotSpin{
+  0%{transform:translateY(-80%)}
+  100%{transform:translateY(0%)}
+}
+.slot-final{display:block;line-height:1.15em}
 #screen-pick{background:linear-gradient(145deg,#1a1a2e,#16213e,#0f3460);align-items:center;justify-content:center;padding:40px 24px;text-align:center}
 .pick-logo{font-size:64px;margin-bottom:12px}
 .pick-title{font-size:36px;font-weight:900;color:white;margin-bottom:6px}
@@ -218,6 +265,17 @@
   </style>
 </head>
 <body>
+
+<!-- SPLASH -->
+
+<div id="splash">
+  <div class="book">
+    <div class="book-cover">&#x1F4C3;</div>
+    <div class="book-page"></div>
+  </div>
+  <div class="splash-logo"><span>Split</span>Mate</div>
+  <div class="splash-sub">Opening your books…</div>
+</div>
 
 <!-- BAR TOOLTIP -->
 
@@ -500,13 +558,47 @@ let selectedCategory='food_drinks',selectedSplitMethod='exact';
 let editingExpenseId=null,editingGroupId=null,editingGroupCurrentMembers=[];
 let spendChart=null,barChart=null;
 
+// ── SLOT MACHINE NUMBER ANIMATION ──
+// Replaces a DOM element's text with a rolling animation then lands on the final value.
+function slotNumber(el,finalText,cls=''){
+  if(!el)return;
+  // Build a reel: a few random-looking numbers above, then the real value
+  const chars='0123456789';
+  const dummy=Array.from({length:4},()=>{
+    // mimic the format of the final text but with random digits
+    return finalText.replace(/[0-9]/g,()=>chars[Math.floor(Math.random()*10)]);
+  });
+  const reelHTML=[...dummy,finalText].map((t,i)=>
+    `<span class="slot-final" style="opacity:${i<dummy.length?0.3:1}">${t}</span>`
+  ).join('');
+  el.innerHTML=`<span class="slot-wrap"><span class="slot-reel">${reelHTML}</span></span>`;
+  if(cls)el.className=cls;
+  // After animation ends, replace with plain text so it's selectable/clean
+  setTimeout(()=>{el.innerHTML=finalText;if(cls)el.className=cls;},500);
+}
+
+// ── INIT ──
 async function init(){
-  await loadAllMembers();
-  const savedId=localStorage.getItem('splitmate_member_id');
+  // Start the animation immediately, load data in parallel
+  const splash=document.getElementById('splash');
+  const dataPromise=loadAllMembers();
+
+  // Ensure splash shows for at least 900ms so the book animation plays fully
+  const [,savedId]=await Promise.all([
+    new Promise(r=>setTimeout(r,900)),
+    dataPromise.then(()=>localStorage.getItem('splitmate_member_id'))
+  ]);
+
+  // Fade out splash
+  splash.classList.add('hidden');
+
   if(savedId&&allMembers.find(m=>m.id===savedId)){
     currentMember=allMembers.find(m=>m.id===savedId);
     await showHome();
-  }else{renderNamePicker();showScreen('pick');}
+  }else{
+    renderNamePicker();
+    showScreen('pick');
+  }
 }
 
 async function loadAllMembers(){
@@ -529,6 +621,10 @@ function pickName(id){
 
 async function showHome(){
   document.getElementById('home-username').textContent=currentMember?.name||'—';
+  // Show neutral state immediately — slot animation will replace it
+  const balEl=document.getElementById('home-balance');
+  balEl.textContent='···';
+  balEl.className='amount neutral';
   showScreen('home');
   await loadGroups();
   await updateOverallBalance();
@@ -556,7 +652,7 @@ async function loadGroups(){
           <div class="name">${g.name}</div>
           <div class="members" id="gm-${g.id}">...</div>
         </div>
-        <div class="group-balance" id="gb-${g.id}"><div class="amt" style="color:#636e72">—</div></div>
+        <div class="group-balance" id="gb-${g.id}"><div class="amt" style="color:#636e72">···</div></div>
       </div>
     </div>`;
   }).join('');
@@ -596,7 +692,16 @@ async function loadGroupCardInfo(groupId){
   if(bel){
     const color=bal>0.01?'#1CC29F':bal<-0.01?'#FF6B6B':'#636e72';
     const lbl=bal>0.01?'owed to you':bal<-0.01?'you owe':'settled';
-    bel.innerHTML=`<div class="amt" style="color:${color}">${fmt(Math.abs(bal))}</div><div class="lbl">${lbl}</div>`;
+    const amtEl=document.createElement('div');
+    amtEl.className='amt';
+    amtEl.style.color=color;
+    const lblEl=document.createElement('div');
+    lblEl.className='lbl';
+    lblEl.textContent=lbl;
+    bel.innerHTML='';
+    bel.appendChild(amtEl);
+    bel.appendChild(lblEl);
+    slotNumber(amtEl,fmt(Math.abs(bal)));
   }
 }
 
@@ -606,8 +711,8 @@ async function updateOverallBalance(){
   let total=0;
   for(const m of mbs)total+=await getMyBalance(m.group_id);
   const el=document.getElementById('home-balance');
-  el.textContent=fmt(Math.abs(total));
-  el.className='amount '+(total>0.01?'positive':total<-0.01?'negative':'neutral');
+  const cls='amount '+(total>0.01?'positive':total<-0.01?'negative':'neutral');
+  slotNumber(el,fmt(Math.abs(total)),cls);
 }
 
 async function getMyBalance(groupId){
@@ -731,10 +836,16 @@ async function loadBalanceCards(){
     const lbl=bal>0.01?'is owed':bal<-0.01?'owes':'settled';
     return `<div class="balance-card" onclick="openMemberStats('${m.id}')">
       <div class="person">${m.name}</div>
-      <div class="bal ${cls}">${fmt(Math.abs(bal))}</div>
+      <div class="bal ${cls}" id="balv-${m.id}">${fmt(Math.abs(bal))}</div>
       <div class="bal-lbl">${lbl}</div>
     </div>`;
   }).join('');
+  // Animate each balance value
+  currentGroupMembers.forEach(m=>{
+    const bal=balances[m.id]||0;
+    const cls=bal>0.01?'bal pos':bal<-0.01?'bal neg':'bal';
+    slotNumber(document.getElementById(`balv-${m.id}`),fmt(Math.abs(bal)),cls);
+  });
 }
 
 async function openMemberStats(memberId){
