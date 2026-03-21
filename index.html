@@ -22,20 +22,6 @@
     .screen.active{display:flex}
 
 ```
-/* ── SPLASH SCREEN ── */
-#splash{
-  position:fixed;inset:0;z-index:9999;
-  background:linear-gradient(145deg,#1a1a2e,#16213e,#0f3460);
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:12px;
-  transition:opacity .5s ease;
-}
-#splash.hidden{opacity:0;pointer-events:none}
-.splash-icon{font-size:72px;margin-bottom:8px}
-.splash-logo{font-size:42px;font-weight:900;color:white;letter-spacing:-1px}
-.splash-logo span{color:#1CC29F}
-.splash-sub{font-size:14px;color:rgba(255,255,255,.45);font-weight:600;letter-spacing:1px;text-transform:uppercase}
-
 /* ── SLOT MACHINE NUMBER ── */
 .slot-wrap{
   display:inline-flex;overflow:hidden;
@@ -255,14 +241,6 @@
   </style>
 </head>
 <body>
-
-<!-- SPLASH -->
-
-<div id="splash">
-  <div class="splash-icon">&#x1F4B8;</div>
-  <div class="splash-logo"><span>€</span> Split</div>
-  <div class="splash-sub">Split smarter</div>
-</div>
 
 <!-- BAR TOOLTIP -->
 
@@ -572,20 +550,8 @@ function slotNumber(el,finalText,cls=''){
 
 // ── INIT ──
 async function init(){
-  // Start the animation immediately, load data in parallel
-  const splash=document.getElementById('splash');
-  const dataPromise=loadAllMembers();
-
-  // Ensure splash shows for at least 1500ms
-  const [,savedId]=await Promise.all([
-    new Promise(r=>setTimeout(r,1500)),
-    dataPromise.then(()=>localStorage.getItem('splitmate_member_id'))
-  ]);
-
-  // Fade out splash
-  splash.classList.add('hidden');
-  setTimeout(()=>splash.style.display='none', 520);
-
+  await loadAllMembers();
+  const savedId=localStorage.getItem('splitmate_member_id');
   if(savedId&&allMembers.find(m=>m.id===savedId)){
     currentMember=allMembers.find(m=>m.id===savedId);
     await showHome();
