@@ -7,8 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="€ Split"/>
-  <title>€ Split</title>
+  <meta name="apple-mobile-web-app-title" content="SplitMate"/>
+  <title>SplitMate</title>
   <link rel="apple-touch-icon" href="/icon.png"/>
   <link rel="icon" href="/icon.png" type="image/png"/>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -102,6 +102,7 @@
 .sheet-title{font-size:22px;font-weight:900;color:#2d3436}
 .sheet-close{background:#f0f0f0;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#636e72;font-size:16px;font-weight:900;flex-shrink:0;line-height:1}
 .sheet-body{padding:0 20px 48px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.sheet-body.chat-body{padding:0;display:flex;flex-direction:column;overflow:hidden}
 
 /* INPUTS */
 .input-group{margin-bottom:14px}
@@ -115,7 +116,19 @@
 .msg.success{background:#d4f5ee;color:#0a7c5c}
 .msg.error{background:#ffe0e0;color:#c0392b}
 
-/* GROUP DETAIL */
+/* GROUP EXPAND TRANSITION */
+@keyframes groupExpand{
+  0%  {transform:scale(.92) translateY(18px);opacity:0}
+  60% {opacity:1}
+  100%{transform:scale(1)  translateY(0);   opacity:1}
+}
+#screen-group.expanding{animation:groupExpand .32s cubic-bezier(.22,1,.36,1) both}
+
+/* CHAT FAB */
+.chat-fab{position:fixed;bottom:28px;left:20px;width:56px;height:56px;border-radius:50%;background:rgba(108,99,255,.38);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1.5px solid rgba(255,255,255,.35);color:white;font-size:24px;cursor:pointer;box-shadow:0 4px 18px rgba(108,99,255,.3),inset 0 1px 0 rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;z-index:200;transition:transform .1s}
+.chat-fab:active{transform:scale(.92)}
+.chat-badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;background:#FF6B6B;border-radius:9px;font-size:11px;font-weight:900;color:white;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #f0f4f8;display:none}
+.chat-fab-wrap{position:fixed;bottom:28px;left:20px;z-index:200;display:none}
 .group-detail-header{padding:28px 20px 16px;color:white;position:sticky;top:0;z-index:100}
 .back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .back-row .back{color:rgba(255,255,255,.8);font-size:14px;font-weight:700;cursor:pointer}
@@ -248,7 +261,7 @@
 
 <div id="screen-pick" class="screen active">
   <div class="pick-logo">&#x1F4B8;</div>
-  <div class="pick-title"><span>€</span> Split</div>
+  <div class="pick-title"><span>Split</span>Mate</div>
   <div class="pick-sub">Who are you?</div>
   <div class="pick-card">
     <h2>Pick your name &#x1F44B;</h2>
@@ -299,6 +312,12 @@
   <div class="section-title">Expenses</div>
   <div class="expenses-list" id="expenses-list"></div>
   <button class="fab" onclick="openAddExpense()">+</button>
+  <div class="chat-fab-wrap" id="chat-fab-wrap">
+    <button class="chat-fab" onclick="openChat()" style="position:relative">
+      &#x1F4AC;
+      <span class="chat-badge" id="chat-badge"></span>
+    </button>
+  </div>
 </div>
 
 <!-- SETTINGS SHEET -->
@@ -508,6 +527,47 @@
   </div>
 </div>
 
+<!-- CHAT SHEET -->
+
+<div class="sheet-overlay" id="sheet-chat">
+  <div class="sheet" style="height:92vh">
+    <div class="sheet-header">
+      <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
+      <div class="sheet-title-row">
+        <span class="sheet-title" id="chat-title">Chat</span>
+        <button class="sheet-close" onclick="closeChat()">&#x2715;</button>
+      </div>
+    </div>
+    <!-- Messages area -->
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch"></div>
+    <!-- Read receipts bar -->
+    <div id="chat-read-receipts" style="padding:4px 16px;min-height:20px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div>
+    <!-- Input bar -->
+    <div style="padding:10px 16px 32px;display:flex;gap:8px;background:white;border-top:1px solid #e0e0e0;flex-shrink:0">
+      <input id="chat-input" type="text" placeholder="Message…"
+        style="flex:1;padding:11px 14px;border:2px solid #e0e0e0;border-radius:22px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;background:#f8f8f8;color:#2d3436"
+        onkeydown="if(event.key==='Enter')sendMessage()"/>
+      <button onclick="sendMessage()"
+        style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;color:white;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">&#x2192;</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* CHAT BUBBLES */
+  .chat-msg{display:flex;flex-direction:column;max-width:78%}
+  .chat-msg.mine{align-self:flex-end;align-items:flex-end}
+  .chat-msg.theirs{align-self:flex-start;align-items:flex-start}
+  .chat-bubble{padding:9px 14px;border-radius:18px;font-size:14px;font-weight:600;line-height:1.4;word-break:break-word}
+  .chat-msg.mine .chat-bubble{background:linear-gradient(135deg,var(--purple),var(--blue));color:white;border-bottom-right-radius:4px}
+  .chat-msg.theirs .chat-bubble{background:white;color:#2d3436;border:1px solid #e8e8e8;border-bottom-left-radius:4px}
+  .chat-meta{font-size:10px;font-weight:700;color:#aaa;margin-top:3px;padding:0 4px}
+  .chat-sender{font-size:11px;font-weight:800;color:#636e72;margin-bottom:3px;padding:0 4px}
+  .read-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:white}
+  .unread-divider{text-align:center;padding:8px 0;font-size:11px;font-weight:800;color:#FF6B6B;display:flex;align-items:center;gap:8px}
+  .unread-divider::before,.unread-divider::after{content:'';flex:1;height:1px;background:#FF6B6B;opacity:.3}
+</style>
+
 <script>
 const SUPABASE_URL='https://vfxzgsywikkzayxwcsmk.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmeHpnc3l3aWtremF5eHdjc21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MDg0MzIsImV4cCI6MjA4ODQ4NDQzMn0.wYK18UAK22m6zCImMaHyCwcWILkGexaXCn0OzNrvd6c';
@@ -534,6 +594,127 @@ function slotNumber(el,finalText,cls=''){
   // After animation ends, unwrap to plain text
   setTimeout(()=>{el.innerHTML=finalText;if(cls)el.className=cls;},420);
 }
+
+// ── CHAT ──
+let chatSubscription=null;
+
+async function loadChatBadge(){
+  if(!currentGroup||!currentMember)return;
+  // Get user's last read timestamp
+  const{data:readRow}=await sb.from('chat_reads')
+    .select('last_read_at').eq('group_id',currentGroup).eq('member_id',currentMember.id).maybeSingle();
+  const lastRead=readRow?.last_read_at||'1970-01-01';
+  const{count}=await sb.from('chat_messages')
+    .select('id',{count:'exact',head:true})
+    .eq('group_id',currentGroup)
+    .neq('sender_id',currentMember.id)
+    .gt('created_at',lastRead);
+  const badge=document.getElementById('chat-badge');
+  if(badge){
+    if(count>0){badge.style.display='flex';badge.textContent=count>99?'99+':count;}
+    else badge.style.display='none';
+  }
+}
+
+async function openChat(){
+  const group=await sb.from('groups').select('name').eq('id',currentGroup).single();
+  document.getElementById('chat-title').textContent=group.data?.name||'Chat';
+  await renderMessages();
+  openSheet('sheet-chat');
+  // Mark as read
+  await markRead();
+  // Hide badge immediately
+  const badge=document.getElementById('chat-badge');
+  if(badge)badge.style.display='none';
+  // Scroll to last read / bottom
+  scrollChatToLastRead();
+  // Subscribe to realtime
+  if(chatSubscription)chatSubscription.unsubscribe();
+  chatSubscription=sb.channel(`chat:${currentGroup}`)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:`group_id=eq.${currentGroup}`},
+      async()=>{await renderMessages();scrollChatToBottom();await markRead();})
+    .subscribe();
+}
+
+function closeChat(){
+  if(chatSubscription){chatSubscription.unsubscribe();chatSubscription=null;}
+  closeSheet('sheet-chat');
+}
+
+async function renderMessages(){
+  const[{data:messages},{data:reads}]=await Promise.all([
+    sb.from('chat_messages').select('*').eq('group_id',currentGroup).order('created_at',{ascending:true}),
+    sb.from('chat_reads').select('*').eq('group_id',currentGroup)
+  ]);
+  if(!messages)return;
+  // Build read map: memberId → last_read_at
+  const readMap={};
+  (reads||[]).forEach(r=>{if(r.member_id!==currentMember.id)readMap[r.member_id]=r.last_read_at;});
+  // Find my last read marker
+  const myRead=(reads||[]).find(r=>r.member_id===currentMember.id)?.last_read_at||'1970-01-01';
+  let foundUnread=false;
+  const el=document.getElementById('chat-messages');
+  el.innerHTML=messages.map((msg,idx)=>{
+    const mine=msg.sender_id===currentMember.id;
+    const sender=currentGroupMembers.find(m=>m.id===msg.sender_id);
+    const senderName=sender?.name||'Unknown';
+    const senderColor=COLORS[currentGroupMembers.indexOf(sender)%COLORS.length]||'#aaa';
+    const time=new Date(msg.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    // Read receipts: which other members have read up to this message
+    const readers=Object.entries(readMap)
+      .filter(([mid,ts])=>ts>=msg.created_at)
+      .map(([mid])=>currentGroupMembers.find(m=>m.id===mid))
+      .filter(Boolean);
+    const receipts=readers.length&&mine
+      ?readers.map(m=>{
+          const c=COLORS[currentGroupMembers.indexOf(m)%COLORS.length];
+          return `<span class="read-avatar" style="background:${c}" title="${m.name}">${m.name[0]}</span>`;
+        }).join('')
+      :'';
+    // Unread divider
+    let divider='';
+    if(!mine&&!foundUnread&&msg.created_at>myRead){
+      foundUnread=true;
+      divider=`<div class="unread-divider" id="unread-marker">New messages</div>`;
+    }
+    return `${divider}<div class="chat-msg ${mine?'mine':'theirs'}" id="cmsg-${msg.id}">
+      ${!mine?`<div class="chat-sender" style="color:${senderColor}">${senderName}</div>`:''}
+      <div class="chat-bubble">${escHtml(msg.content)}</div>
+      <div class="chat-meta">${time}${receipts?` <span style="display:inline-flex;gap:2px;vertical-align:middle">${receipts}</span>`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+function scrollChatToLastRead(){
+  const marker=document.getElementById('unread-marker');
+  const el=document.getElementById('chat-messages');
+  if(marker)setTimeout(()=>marker.scrollIntoView({block:'start'}),80);
+  else scrollChatToBottom();
+}
+function scrollChatToBottom(){
+  const el=document.getElementById('chat-messages');
+  if(el)setTimeout(()=>el.scrollTop=el.scrollHeight,50);
+}
+
+async function markRead(){
+  if(!currentGroup||!currentMember)return;
+  const now=new Date().toISOString();
+  await sb.from('chat_reads').upsert({group_id:currentGroup,member_id:currentMember.id,last_read_at:now},{onConflict:'group_id,member_id'});
+}
+
+async function sendMessage(){
+  const input=document.getElementById('chat-input');
+  const content=input.value.trim();
+  if(!content)return;
+  input.value='';
+  await sb.from('chat_messages').insert({group_id:currentGroup,sender_id:currentMember.id,content});
+  // Realtime will trigger renderMessages, but also do it immediately
+  await renderMessages();
+  scrollChatToBottom();
+  await markRead();
+}
+
+function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // ── INIT ──
 async function init(){
@@ -572,6 +753,7 @@ async function pickName(id){
 }
 
 async function showHome(){
+  document.getElementById('chat-fab-wrap').style.display='none';
   const nameEl=document.getElementById('home-username');
   nameEl.innerHTML=currentMember?.name||'—';
   if(isAdmin())nameEl.innerHTML+=` <span class="admin-badge">&#x1F451; Admin</span>`;
@@ -762,16 +944,40 @@ async function deleteGroup(id){
 }
 
 async function openGroup(groupId){
+  // ── MEMBERSHIP GUARD ── only members can enter
+  const{data:membership}=await sb.from('group_members')
+    .select('id').eq('group_id',groupId).eq('member_id',currentMember.id).maybeSingle();
+  if(!membership){
+    alert("You're not a member of this group.");
+    return;
+  }
+
   currentGroup=groupId;
   const{data:group}=await sb.from('groups').select('*').eq('id',groupId).single();
   const{data:gms}=await sb.from('group_members').select('members(*)').eq('group_id',groupId);
   currentGroupMembers=gms?.map(m=>m.members).filter(Boolean)||[];
+
   const i=groupId.charCodeAt(0)%COLORS.length;
-  document.getElementById('group-header-bg').style.background=`linear-gradient(135deg,${COLORS[i]},${COLORS[(i+2)%COLORS.length]}cc)`;
+  document.getElementById('group-header-bg').style.background=
+    `linear-gradient(135deg,${COLORS[i]},${COLORS[(i+2)%COLORS.length]}cc)`;
   document.getElementById('group-detail-name').textContent=group.name;
-  document.getElementById('group-member-chips').innerHTML=currentGroupMembers.map(m=>`<div class="member-chip">${m.name}</div>`).join('');
+  document.getElementById('group-member-chips').innerHTML=
+    currentGroupMembers.map(m=>`<div class="member-chip">${m.name}</div>`).join('');
+
+  // Show chat FAB
+  document.getElementById('chat-fab-wrap').style.display='block';
+
+  // ── EXPAND ANIMATION ──
+  const screen=document.getElementById('screen-group');
+  screen.classList.remove('expanding');
   showScreen('group');
+  // Force reflow so the class removal is registered before re-adding
+  void screen.offsetWidth;
+  screen.classList.add('expanding');
+  screen.addEventListener('animationend',()=>screen.classList.remove('expanding'),{once:true});
+
   await loadGroupDetail();
+  await loadChatBadge();
 }
 
 async function loadGroupDetail(){await loadBalanceCards();await loadExpenses();}
