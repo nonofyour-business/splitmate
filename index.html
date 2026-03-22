@@ -704,13 +704,42 @@ async function markRead(){
 }
 
 async function sendMessage(){
+async function sendMessage(){
   const input=document.getElementById('chat-input');
   const content=input.value.trim();
   if(!content)return;
+
+  // Show sending state
+  input.disabled=true;
+
+  console.log('Sending message:', {
+    group_id: currentGroup,
+    sender_id: currentMember?.id,
+    content
+  });
+
+  const{data,error}=await sb.from('chat_messages').insert({
+    group_id: currentGroup,
+    sender_id: currentMember.id,
+    content
+  }).select();
+
+  input.disabled=false;
+
+  if(error){
+    // Show error visibly in the chat area so we can debug
+    const el=document.getElementById('chat-messages');
+    const errDiv=document.createElement('div');
+    errDiv.style.cssText='background:#ffe0e0;color:#c0392b;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;margin:4px 0;word-break:break-all';
+    errDiv.textContent='Send failed: '+error.message+' (code: '+error.code+')';
+    el.appendChild(errDiv);
+    el.scrollTop=el.scrollHeight;
+    console.error('Send error full:', error);
+    return;
+  }
+
   input.value='';
   input.focus();
-  const{error}=await sb.from('chat_messages').insert({group_id:currentGroup,sender_id:currentMember.id,content});
-  if(error){console.error('send error',error);input.value=content;return;}
   await renderMessages();
   scrollChatToBottom();
   await markRead();
