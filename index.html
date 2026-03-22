@@ -530,7 +530,7 @@
 <!-- CHAT SHEET -->
 
 <div class="sheet-overlay" id="sheet-chat">
-  <div class="sheet" style="height:92vh">
+  <div class="sheet" style="height:92vh;overflow:visible">
     <div class="sheet-header">
       <div class="sheet-handle-zone"><div class="sheet-handle"></div></div>
       <div class="sheet-title-row">
@@ -538,17 +538,18 @@
         <button class="sheet-close" onclick="closeChat()">&#x2715;</button>
       </div>
     </div>
-    <!-- Messages area -->
-    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch"></div>
-    <!-- Read receipts bar -->
-    <div id="chat-read-receipts" style="padding:4px 16px;min-height:20px;display:flex;gap:6px;align-items:center;flex-wrap:wrap"></div>
-    <!-- Input bar -->
-    <div style="padding:10px 16px 32px;display:flex;gap:8px;background:white;border-top:1px solid #e0e0e0;flex-shrink:0">
-      <input id="chat-input" type="text" placeholder="Message…"
-        style="flex:1;padding:11px 14px;border:2px solid #e0e0e0;border-radius:22px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;background:#f8f8f8;color:#2d3436"
-        onkeydown="if(event.key==='Enter')sendMessage()"/>
-      <button onclick="sendMessage()"
-        style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;color:white;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">&#x2192;</button>
+    <!-- Flex wrapper fills remaining sheet height -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0">
+      <!-- Messages area -->
+      <div id="chat-messages" style="flex:1;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;min-height:0"></div>
+      <!-- Input bar -->
+      <div style="padding:10px 16px 28px;display:flex;gap:8px;background:white;border-top:1px solid #e0e0e0;flex-shrink:0">
+        <input id="chat-input" type="text" placeholder="Message…"
+          style="flex:1;padding:11px 14px;border:2px solid #e0e0e0;border-radius:22px;font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;background:#f8f8f8;color:#2d3436"
+          onkeydown="if(event.key==='Enter')sendMessage()"/>
+        <button onclick="sendMessage()"
+          style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;color:white;font-size:20px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">&#x2197;</button>
+      </div>
     </div>
   </div>
 </div>
@@ -617,22 +618,25 @@ async function loadChatBadge(){
 }
 
 async function openChat(){
-  const group=await sb.from('groups').select('name').eq('id',currentGroup).single();
-  document.getElementById('chat-title').textContent=group.data?.name||'Chat';
+  const{data:group}=await sb.from('groups').select('name').eq('id',currentGroup).single();
+  document.getElementById('chat-title').textContent=group?.name||'Chat';
   await renderMessages();
   openSheet('sheet-chat');
-  // Mark as read
   await markRead();
-  // Hide badge immediately
   const badge=document.getElementById('chat-badge');
   if(badge)badge.style.display='none';
-  // Scroll to last read / bottom
-  scrollChatToLastRead();
-  // Subscribe to realtime
-  if(chatSubscription)chatSubscription.unsubscribe();
-  chatSubscription=sb.channel(`chat:${currentGroup}`)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'chat_messages',filter:`group_id=eq.${currentGroup}`},
-      async()=>{await renderMessages();scrollChatToBottom();await markRead();})
+  setTimeout(()=>scrollChatToBottom(),200);
+
+  // Unsubscribe any existing subscription
+  if(chatSubscription){chatSubscription.unsubscribe();chatSubscription=null;}
+
+  // Use broadcast channel to match the SQL trigger format
+  chatSubscription=sb.channel(`group:${currentGroup}:messages`)
+    .on('broadcast',{event:'INSERT'},async()=>{
+      await renderMessages();
+      scrollChatToBottom();
+      await markRead();
+    })
     .subscribe();
 }
 
@@ -642,36 +646,36 @@ function closeChat(){
 }
 
 async function renderMessages(){
-  const[{data:messages},{data:reads}]=await Promise.all([
+  const el=document.getElementById('chat-messages');
+  if(!el)return;
+  const[{data:messages,error},{data:reads}]=await Promise.all([
     sb.from('chat_messages').select('*').eq('group_id',currentGroup).order('created_at',{ascending:true}),
     sb.from('chat_reads').select('*').eq('group_id',currentGroup)
   ]);
-  if(!messages)return;
-  // Build read map: memberId → last_read_at
+  if(error){console.error('chat fetch',error);return;}
+  if(!messages||messages.length===0){
+    el.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center;color:#b0b0b0;font-size:14px;font-weight:700;text-align:center;padding:40px 20px">No messages yet.<br/>Say hello! &#x1F44B;</div>';
+    return;
+  }
   const readMap={};
   (reads||[]).forEach(r=>{if(r.member_id!==currentMember.id)readMap[r.member_id]=r.last_read_at;});
-  // Find my last read marker
   const myRead=(reads||[]).find(r=>r.member_id===currentMember.id)?.last_read_at||'1970-01-01';
   let foundUnread=false;
-  const el=document.getElementById('chat-messages');
-  el.innerHTML=messages.map((msg,idx)=>{
+  el.innerHTML=messages.map((msg)=>{
     const mine=msg.sender_id===currentMember.id;
     const sender=currentGroupMembers.find(m=>m.id===msg.sender_id);
     const senderName=sender?.name||'Unknown';
     const senderColor=COLORS[currentGroupMembers.indexOf(sender)%COLORS.length]||'#aaa';
     const time=new Date(msg.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-    // Read receipts: which other members have read up to this message
     const readers=Object.entries(readMap)
-      .filter(([mid,ts])=>ts>=msg.created_at)
+      .filter(([,ts])=>ts>=msg.created_at)
       .map(([mid])=>currentGroupMembers.find(m=>m.id===mid))
       .filter(Boolean);
     const receipts=readers.length&&mine
-      ?readers.map(m=>{
+      ?`<span style="display:inline-flex;gap:2px;vertical-align:middle">${readers.map(m=>{
           const c=COLORS[currentGroupMembers.indexOf(m)%COLORS.length];
           return `<span class="read-avatar" style="background:${c}" title="${m.name}">${m.name[0]}</span>`;
-        }).join('')
-      :'';
-    // Unread divider
+        }).join('')}</span>`:''
     let divider='';
     if(!mine&&!foundUnread&&msg.created_at>myRead){
       foundUnread=true;
@@ -680,26 +684,23 @@ async function renderMessages(){
     return `${divider}<div class="chat-msg ${mine?'mine':'theirs'}" id="cmsg-${msg.id}">
       ${!mine?`<div class="chat-sender" style="color:${senderColor}">${senderName}</div>`:''}
       <div class="chat-bubble">${escHtml(msg.content)}</div>
-      <div class="chat-meta">${time}${receipts?` <span style="display:inline-flex;gap:2px;vertical-align:middle">${receipts}</span>`:''}</div>
+      <div class="chat-meta">${time}${receipts?' '+receipts:''}</div>
     </div>`;
   }).join('');
 }
 
-function scrollChatToLastRead(){
-  const marker=document.getElementById('unread-marker');
-  const el=document.getElementById('chat-messages');
-  if(marker)setTimeout(()=>marker.scrollIntoView({block:'start'}),80);
-  else scrollChatToBottom();
-}
 function scrollChatToBottom(){
   const el=document.getElementById('chat-messages');
-  if(el)setTimeout(()=>el.scrollTop=el.scrollHeight,50);
+  if(el)setTimeout(()=>{el.scrollTop=el.scrollHeight;},60);
 }
 
 async function markRead(){
   if(!currentGroup||!currentMember)return;
   const now=new Date().toISOString();
-  await sb.from('chat_reads').upsert({group_id:currentGroup,member_id:currentMember.id,last_read_at:now},{onConflict:'group_id,member_id'});
+  await sb.from('chat_reads').upsert(
+    {group_id:currentGroup,member_id:currentMember.id,last_read_at:now},
+    {onConflict:'group_id,member_id'}
+  );
 }
 
 async function sendMessage(){
@@ -707,8 +708,9 @@ async function sendMessage(){
   const content=input.value.trim();
   if(!content)return;
   input.value='';
-  await sb.from('chat_messages').insert({group_id:currentGroup,sender_id:currentMember.id,content});
-  // Realtime will trigger renderMessages, but also do it immediately
+  input.focus();
+  const{error}=await sb.from('chat_messages').insert({group_id:currentGroup,sender_id:currentMember.id,content});
+  if(error){console.error('send error',error);input.value=content;return;}
   await renderMessages();
   scrollChatToBottom();
   await markRead();
