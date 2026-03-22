@@ -630,9 +630,14 @@ async function openChat(){
   // Unsubscribe any existing subscription
   if(chatSubscription){chatSubscription.unsubscribe();chatSubscription=null;}
 
-  // Use broadcast channel to match the SQL trigger format
-  chatSubscription=sb.channel(`group:${currentGroup}:messages`)
-    .on('broadcast',{event:'INSERT'},async()=>{
+  // Use standard postgres_changes realtime
+  chatSubscription=sb.channel('chat-'+currentGroup)
+    .on('postgres_changes',{
+      event:'INSERT',
+      schema:'public',
+      table:'chat_messages',
+      filter:`group_id=eq.${currentGroup}`
+    }, async()=>{
       await renderMessages();
       scrollChatToBottom();
       await markRead();
